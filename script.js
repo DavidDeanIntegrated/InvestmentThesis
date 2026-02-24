@@ -315,7 +315,7 @@ function initChart() {
     },
   });
 
-  // build legend
+  // build two-column legend with dollar amounts
   const legendEl = document.getElementById('currentLegend');
   HOLDINGS.forEach((h, i) => {
     const item = document.createElement('div');
@@ -325,6 +325,7 @@ function initChart() {
         <div class="legend-dot" style="background:${colors[i]}"></div>
         <span class="legend-ticker">${h.ticker}</span>
       </div>
+      <span class="legend-dollar">$${fmt(h.dollar)}</span>
       <span class="legend-pct">${h.pct.toFixed(1)}%</span>
     `;
     legendEl.appendChild(item);
@@ -343,32 +344,30 @@ function initSleeveBars() {
     const inTarget = s.currentPct >= s.targetLow && s.currentPct <= s.targetHigh;
     const curW     = (s.currentPct  / MAX * 100).toFixed(1);
     const lowW     = (s.targetLow   / MAX * 100).toFixed(1);
-    const highW    = (s.targetHigh  / MAX * 100).toFixed(1);
     const rangeW   = ((s.targetHigh - s.targetLow) / MAX * 100).toFixed(1);
 
-    const statusIcon  = inTarget ? '✓' : '↑';
+    const statusIcon  = inTarget ? '✓' : '↗';
     const statusClass = inTarget ? 'in-target' : 'over-target';
 
     const row = document.createElement('div');
     row.className = 'sleeve-row';
     row.innerHTML = `
-      <span class="sleeve-name">${s.name}</span>
+      <div class="sleeve-row-header">
+        <span class="sleeve-name">${s.name}</span>
+        <div class="sleeve-meta">
+          <span class="sleeve-target-label">Target: ${s.targetLow}–${s.targetHigh}%</span>
+          <span class="sleeve-status ${statusClass}">${statusIcon}</span>
+        </div>
+      </div>
       <div class="sleeve-bar-track">
         <div class="sleeve-range-band" style="left:${lowW}%;width:${rangeW}%;background:${s.color}"></div>
         <div class="sleeve-bar-current" style="width:${curW}%;background:${s.color}">
           <span class="sleeve-bar-label">${s.currentPct.toFixed(1)}%</span>
         </div>
       </div>
-      <span class="sleeve-target-label">${s.targetLow}–${s.targetHigh}%</span>
-      <span class="sleeve-status ${statusClass}">${statusIcon}</span>
+      <div class="sleeve-purpose">${s.purpose}</div>
     `;
     container.appendChild(row);
-
-    // tooltip with purpose
-    const purposeDiv = document.createElement('div');
-    purposeDiv.className = 'sleeve-purpose';
-    purposeDiv.textContent = s.purpose;
-    row.appendChild(purposeDiv);
   });
 }
 
