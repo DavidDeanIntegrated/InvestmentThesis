@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dalio-Adjusted Portfolio · $3,795</title>
+  <title>Dalio-Adjusted Portfolio · $3,786</title>
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -15,20 +15,24 @@
       <div class="header-left">
         <span class="header-badge">All Weather</span>
         <h1>Dalio-Adjusted Portfolio</h1>
-        <p class="header-sub">Ray Dalio principles applied to your real $3,795 holdings</p>
+        <p class="header-sub">Ray Dalio principles applied to your real $3,786 holdings · February 24, 2026</p>
       </div>
       <div class="header-right">
         <div class="stat-pill">
           <span class="stat-label">Total Value</span>
-          <span class="stat-value">$3,794.92</span>
+          <span class="stat-value">$3,786</span>
         </div>
         <div class="stat-pill">
           <span class="stat-label">Positions</span>
-          <span class="stat-value">11 → 12</span>
+          <span class="stat-value">12</span>
         </div>
         <div class="stat-pill">
-          <span class="stat-label">Rebalance</span>
-          <span class="stat-value green">$305.92</span>
+          <span class="stat-label">Real Assets</span>
+          <span class="stat-value gold">14.4%</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Dry Powder</span>
+          <span class="stat-value green">16.0%</span>
         </div>
       </div>
     </div>
@@ -42,82 +46,73 @@
         <h2>Executive Summary</h2>
       </div>
       <div class="summary-card">
-        <p>This analysis applies three Dalio adjustments — <strong>increase gold toward 10–12%</strong>, <strong>add a small commodity allocation</strong>, and <strong>boost international diversification</strong> — recalculated against the actual $3,794.92 portfolio. The current portfolio is already closer to Dalio's targets in some areas (GLD at 8.7% vs. the theoretical 5.5%), but has a notable <span class="highlight-orange">BTC overweight at 12.2%</span> that warrants a strategic plan.</p>
+        <p>This portfolio holds 12 positions totaling <strong>$3,786</strong>, structured entirely around Ray Dalio's principles from <em>"Investing in Light of the Big Cycle."</em> It emphasizes <strong>balanced diversification</strong> across the four key drivers (growth, inflation, risk premiums, discount rates) to survive late-cycle environments of currency devaluation and financial-asset destruction.</p>
         <div class="key-callouts">
-          <div class="callout callout-orange">
-            <div class="callout-icon">⚡</div>
+          <div class="callout callout-blue">
+            <div class="callout-icon">📈</div>
             <div>
-              <strong>BTC Overweight</strong>
-              <span>12.2% vs 4.0% theoretical — 3× target weight</span>
+              <strong>Growth-Oriented Core</strong>
+              <span>~57% equities — broad market, value, quality compounders, selective conviction</span>
+            </div>
+          </div>
+          <div class="callout callout-gold">
+            <div class="callout-icon">🛡</div>
+            <div>
+              <strong>Real-Asset Protection</strong>
+              <span>14.4% (GLD + BCI) — inflation &amp; devaluation hedge; "buy stuff"</span>
             </div>
           </div>
           <div class="callout callout-green">
-            <div class="callout-icon">✓</div>
+            <div class="callout-icon">💧</div>
             <div>
-              <strong>GLD Already Progressing</strong>
-              <span>8.7% vs 5.5% theoretical — only $88 to reach 11%</span>
+              <strong>Tactical Dry Powder</strong>
+              <span>16% SGOV — earning ~4.5–5% yield while waiting for dip entry points</span>
             </div>
           </div>
-          <div class="callout callout-blue">
-            <div class="callout-icon">↗</div>
+          <div class="callout callout-purple">
+            <div class="callout-icon">₿</div>
             <div>
-              <strong>International Head Start</strong>
-              <span>VXUS at 4.3% vs 2.7% theoretical — only $66 to reach 6%</span>
+              <strong>Hard-Money Hedge</strong>
+              <span>12.1% BTC — will dilute naturally toward 8–12% target as portfolio grows</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ═══════════════════════════ ALLOCATION COMPARISON ══════════ -->
+    <!-- ═══════════════════════════ CURRENT ALLOCATION ══════════════ -->
     <section class="section">
       <div class="section-header">
-        <h2>Allocation Comparison</h2>
-        <div class="toggle-group" id="viewToggle">
-          <button class="toggle-btn active" data-view="both">Both</button>
-          <button class="toggle-btn" data-view="current">Current</button>
-          <button class="toggle-btn" data-view="proposed">Proposed</button>
-        </div>
+        <h2>Current Allocation</h2>
       </div>
 
-      <div class="charts-row" id="chartsRow">
-        <!-- Current Allocation Chart -->
-        <div class="chart-card" id="currentChartCard">
+      <div class="charts-row">
+        <div class="chart-card">
           <div class="chart-card-header">
-            <h3>Current Allocation</h3>
-            <span class="chart-total">$3,794.92</span>
+            <h3>Portfolio Breakdown</h3>
+            <span class="chart-total">$3,786 · 12 positions</span>
           </div>
           <div class="chart-wrapper">
             <canvas id="currentChart"></canvas>
             <div class="chart-center-label">
-              <span class="chart-center-value">11</span>
-              <span class="chart-center-sub">positions</span>
+              <span class="chart-center-value">$3,786</span>
+              <span class="chart-center-sub">total</span>
             </div>
           </div>
           <div class="chart-legend" id="currentLegend"></div>
         </div>
 
-        <!-- Proposed Allocation Chart -->
-        <div class="chart-card" id="proposedChartCard">
-          <div class="chart-card-header">
-            <h3>Proposed Allocation</h3>
-            <span class="chart-total new-badge">+BCI</span>
-          </div>
-          <div class="chart-wrapper">
-            <canvas id="proposedChart"></canvas>
-            <div class="chart-center-label">
-              <span class="chart-center-value">12</span>
-              <span class="chart-center-sub">positions</span>
+        <!-- Sleeve Breakdown with Targets -->
+        <div class="sleeve-comparison">
+          <div class="sleeve-comp-header">
+            <h3>Sleeve Breakdown &amp; Dalio-Aligned Targets</h3>
+            <div class="target-legend">
+              <span class="tl-bar"></span><span class="tl-label">Current</span>
+              <span class="tl-range"></span><span class="tl-label">Target range</span>
             </div>
           </div>
-          <div class="chart-legend" id="proposedLegend"></div>
+          <div class="sleeve-bars" id="sleeveBars"></div>
         </div>
-      </div>
-
-      <!-- Sleeve Comparison -->
-      <div class="sleeve-comparison">
-        <h3>Sleeve Shifts at a Glance</h3>
-        <div class="sleeve-bars" id="sleeveBars"></div>
       </div>
     </section>
 
@@ -125,142 +120,47 @@
     <section class="section">
       <div class="section-header">
         <h2>Portfolio Holdings</h2>
-        <div class="toggle-group" id="tableToggle">
-          <button class="toggle-btn active" data-table="all">All</button>
-          <button class="toggle-btn" data-table="changes">Changes Only</button>
-        </div>
+        <span class="section-badge">February 24, 2026</span>
       </div>
 
       <div class="table-wrapper">
-        <table class="holdings-table" id="holdingsTable">
+        <table class="holdings-table">
           <thead>
             <tr>
               <th>Ticker</th>
               <th>Sleeve</th>
-              <th>Current $</th>
-              <th>Current %</th>
-              <th>Proposed $</th>
-              <th>Proposed %</th>
-              <th>Change</th>
+              <th>Value</th>
+              <th>Weight</th>
             </tr>
           </thead>
-          <tbody id="holdingsTbody">
-          </tbody>
+          <tbody id="holdingsTbody"></tbody>
           <tfoot>
             <tr class="table-total">
               <td colspan="2"><strong>Total</strong></td>
-              <td><strong>$3,794.92</strong></td>
+              <td><strong>$3,786</strong></td>
               <td><strong>100%</strong></td>
-              <td><strong>$3,794.92</strong></td>
-              <td><strong>100%</strong></td>
-              <td>—</td>
             </tr>
           </tfoot>
         </table>
       </div>
     </section>
 
-    <!-- ═══════════════════════════ TRADES ══════════════════════════ -->
+    <!-- ═══════════════════════════ PORTFOLIO RATIONALE ════════════ -->
     <section class="section">
       <div class="section-header">
-        <h2>Exact Trades Required</h2>
-        <span class="section-badge">$305.92 net zero</span>
+        <h2>Portfolio Rationale &amp; Dalio Alignment</h2>
       </div>
-
-      <div class="trades-grid">
-        <div class="trades-col">
-          <div class="trades-header sells-header">
-            <span class="trades-icon">↓</span>
-            <h3>Sells</h3>
-          </div>
-          <div class="trade-list" id="sellsList"></div>
-          <div class="trade-total sells-total">
-            <span>Total Sells</span>
-            <span>$305.92</span>
-          </div>
-        </div>
-
-        <div class="trades-arrow">⇄</div>
-
-        <div class="trades-col">
-          <div class="trades-header buys-header">
-            <span class="trades-icon">↑</span>
-            <h3>Buys</h3>
-          </div>
-          <div class="trade-list" id="buysList"></div>
-          <div class="trade-total buys-total">
-            <span>Total Buys</span>
-            <span>$305.92</span>
-          </div>
-        </div>
+      <div class="rationale-intro summary-card">
+        <p>Every sleeve is a "building block" that reacts differently to the four determinants Dalio describes. The design deliberately avoids U.S.-only survivorship bias and protects buying power when financial wealth (cash, bonds, stocks) is devalued relative to tangible "stuff."</p>
       </div>
-    </section>
-
-    <!-- ═══════════════════════════ IMPLEMENTATION TIMELINE ════════ -->
-    <section class="section">
-      <div class="section-header">
-        <h2>Implementation Timeline</h2>
-        <div class="toggle-group" id="pathToggle">
-          <button class="toggle-btn active" data-path="standard">Standard (with trims)</button>
-          <button class="toggle-btn" data-path="nosell">No-Sell Path</button>
-        </div>
-      </div>
-
-      <div class="timeline" id="timeline"></div>
-    </section>
-
-    <!-- ═══════════════════════════ BTC DECISION ═══════════════════ -->
-    <section class="section">
-      <div class="section-header">
-        <h2>The BTC Question</h2>
-        <span class="section-badge orange">12.2% — overweight</span>
-      </div>
-
-      <div class="btc-context">
-        <p>BTC at 12.2% is the elephant in the room. In the theoretical $13K portfolio, BTC was 4.0%. Dalio has endorsed both gold and bitcoin as hedges against fiat devaluation, suggesting a combined allocation of around 10–15%.</p>
-        <div class="hard-money-bar">
-          <span class="hm-label">Hard Money (BTC + GLD) = <strong>23.2%</strong> current → <strong>23.2%</strong> proposed</span>
-          <div class="hm-bar">
-            <div class="hm-segment btc-seg" style="width:12.2%">BTC 12.2%</div>
-            <div class="hm-segment gld-seg" style="width:11%">GLD 11%</div>
-            <div class="hm-segment rest-seg" style="width:76.8%"></div>
-          </div>
-          <div class="hm-note">Dalio target for combined hard money: ~10–15%</div>
-        </div>
-      </div>
-
-      <div class="options-grid">
-        <div class="option-card recommended">
-          <div class="option-header">
-            <span class="rec-badge">Recommended</span>
-            <h3>Option A — Hold & Dilute</h3>
-          </div>
-          <p>As new paycheck contributions flow to other positions and the portfolio grows toward $5K, $8K, $13K+, BTC's weight will naturally compress toward 5–8% <strong>without triggering any taxable events.</strong></p>
-          <ul class="option-pros">
-            <li>No taxable event</li>
-            <li>BTC dilutes naturally over time</li>
-            <li>Superior if BTC has unrealized gains</li>
-          </ul>
-        </div>
-        <div class="option-card">
-          <div class="option-header">
-            <h3>Option B — Trim BTC by ~$155</h3>
-          </div>
-          <p>Redirect the proceeds to GLD and VXUS. This accelerates the rebalancing but creates a <strong>taxable event.</strong></p>
-          <ul class="option-cons">
-            <li>Creates taxable event</li>
-            <li>Only worth it near cost basis</li>
-            <li>Accelerates target weight achievement</li>
-          </ul>
-        </div>
-      </div>
+      <div class="accordion" id="rationaleAccordion"></div>
     </section>
 
     <!-- ═══════════════════════════ DEPLOYMENT LADDER ══════════════ -->
     <section class="section">
       <div class="section-header">
-        <h2>SGOV Deployment Ladder</h2>
-        <span class="section-badge blue">$594 dry powder</span>
+        <h2>SGOV Deployment Strategy &amp; Tactics</h2>
+        <span class="section-badge blue">$607 dry powder</span>
       </div>
 
       <div class="spy-context">
@@ -271,7 +171,7 @@
             <div class="gauge-sub">No action needed · Feb 24, 2026</div>
           </div>
           <div class="spy-info">
-            <p>Monitor <strong>SPY</strong> (not VTI) for deployment signals. Use rolling 3-month high closing price as the baseline — not strict all-time high.</p>
+            <p>Monitor <strong>SPY</strong> (not VTI) for deployment signals. Use the <strong>rolling 3-month high</strong> closing price as the baseline — not strict all-time high. This resets automatically when new highs are made and catches real corrections without leaving you sidelined too long.</p>
           </div>
         </div>
       </div>
@@ -279,17 +179,18 @@
       <div class="ladder" id="deploymentLadder"></div>
 
       <div class="tactics-grid">
-        <h3>Daily / Weekly Tactics</h3>
+        <h3>Daily / Weekly Tactics on Robinhood</h3>
         <div class="tactics-list" id="tacticsList"></div>
       </div>
     </section>
 
-    <!-- ═══════════════════════════ RATIONALE ACCORDIONS ═══════════ -->
+    <!-- ═══════════════════════════ REPLENISHMENT & REBALANCING ════ -->
     <section class="section">
       <div class="section-header">
-        <h2>Rationale for Each Change</h2>
+        <h2>SGOV Replenishment &amp; Rebalancing</h2>
       </div>
-      <div class="accordion" id="rationaleAccordion"></div>
+
+      <div class="rules-grid" id="rulesGrid"></div>
     </section>
 
     <!-- ═══════════════════════════ CONTRIBUTION ORDER ══════════════ -->
@@ -298,14 +199,9 @@
         <h2>New Contribution Priority Order</h2>
       </div>
       <div class="priority-list" id="priorityList"></div>
-    </section>
-
-    <!-- ═══════════════════════════ REBALANCING RULES ═══════════════ -->
-    <section class="section">
-      <div class="section-header">
-        <h2>Rebalancing Rules</h2>
+      <div class="priority-footnote">
+        As the portfolio grows past $8k–$10k, add missing pieces (IWM, BRK.B, AVGO, etc.) when position sizes stay reasonable.
       </div>
-      <div class="rules-grid" id="rulesGrid"></div>
     </section>
 
     <!-- ═══════════════════════════ REFERENCES ══════════════════════ -->
@@ -320,7 +216,7 @@
 
   <footer class="site-footer">
     <div class="footer-inner">
-      <p>Dalio-Adjusted Portfolio Analysis · Updated February 2026</p>
+      <p>Dalio-Adjusted Portfolio · Last Updated February 24, 2026 · Total Value $3,786</p>
       <p class="footer-disclaimer">For informational purposes only. Not financial advice.</p>
     </div>
   </footer>
