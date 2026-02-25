@@ -166,10 +166,30 @@
       <div class="spy-context">
         <div class="spy-gauge-wrapper">
           <div class="spy-gauge">
-            <div class="gauge-label">Current SPY Status</div>
-            <div class="gauge-value">~1.3–2% below 3-month high</div>
-            <div class="gauge-sub">No action needed · Feb 24, 2026</div>
+            <div class="gauge-label">Trigger Reference</div>
+            <div class="gauge-value">Rolling 3-month high</div>
+            <div class="gauge-sub">SPY · Not VTI</div>
           </div>
+
+          <!-- Live SPY Calculator -->
+          <div class="spy-calc-card">
+            <div class="spy-calc-title">SPY Drawdown Calculator</div>
+            <div class="spy-calc-inputs">
+              <div class="spy-calc-field">
+                <label for="spyHigh">3-Month High ($)</label>
+                <input type="number" id="spyHigh" placeholder="e.g. 697" step="0.01" min="0" />
+              </div>
+              <div class="spy-calc-field">
+                <label for="spyCurrent">Today's Price ($)</label>
+                <input type="number" id="spyCurrent" placeholder="e.g. 685" step="0.01" min="0" />
+              </div>
+            </div>
+            <div class="spy-calc-result-row">
+              <div class="spy-calc-pct" id="spyCalcPct">—</div>
+              <div class="spy-trigger-msg" id="spyTriggerMsg">Enter both prices to see status</div>
+            </div>
+          </div>
+
           <div class="spy-info">
             <p>Monitor <strong>SPY</strong> (not VTI) for deployment signals. Use the <strong>rolling 3-month high</strong> closing price as the baseline — not strict all-time high. This resets automatically when new highs are made and catches real corrections without leaving you sidelined too long.</p>
           </div>

@@ -574,9 +574,6 @@ main {
 
 .holdings-table thead {
   background: var(--bg-elevated);
-  position: sticky;
-  top: 72px;
-  z-index: 10;
 }
 
 .holdings-table th {
@@ -1059,6 +1056,112 @@ main {
 }
 
 .ref-link:hover { color: #93c5fd; text-decoration: underline; }
+
+/* ================================================================
+   SPY CALCULATOR
+================================================================ */
+.spy-calc-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 240px;
+  flex: 1;
+}
+
+.spy-calc-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.spy-calc-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.spy-calc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.spy-calc-field label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.spy-calc-field input {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  padding: 8px 10px;
+  width: 100%;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+
+.spy-calc-field input::-webkit-outer-spin-button,
+.spy-calc-field input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.spy-calc-field input::placeholder {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.spy-calc-field input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.spy-calc-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.spy-calc-pct {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.spy-calc-pct.above { color: var(--green); }
+.spy-calc-pct.below { color: var(--red); }
+
+.spy-trigger-msg {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+  text-align: right;
+  max-width: 180px;
+}
+
+.spy-trigger-msg strong { color: var(--text-primary); }
+
+.spy-trigger-msg.trigger-none  { color: var(--text-secondary); }
+.spy-trigger-msg.trigger-safe  { color: var(--green); }
+.spy-trigger-msg.trigger-10    { color: var(--orange); }
+.spy-trigger-msg.trigger-15    { color: #fb923c; }
+.spy-trigger-msg.trigger-25    { color: var(--red); }
 
 /* ================================================================
    FOOTER
