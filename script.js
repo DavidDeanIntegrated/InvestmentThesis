@@ -535,42 +535,55 @@ function initSpyCalc() {
   const pctEl     = document.getElementById('spyCalcPct');
   const msgEl     = document.getElementById('spyTriggerMsg');
 
-  function calculate() {
-    const high = parseFloat(highInput.value);
-    const cur  = parseFloat(curInput.value);
+  if (!highInput || !curInput || !pctEl || !msgEl) return;
 
-    if (!high || !cur || high <= 0 || cur <= 0) {
-      pctEl.textContent    = '—';
-      pctEl.className      = 'spy-calc-pct';
-      msgEl.textContent    = 'Enter both prices to see status';
-      msgEl.className      = 'spy-trigger-msg';
+  function calculate() {
+    const highVal = highInput.value.trim();
+    const curVal  = curInput.value.trim();
+
+    if (!highVal || !curVal) {
+      pctEl.textContent = '—';
+      pctEl.className   = 'spy-calc-pct';
+      msgEl.textContent = 'Enter prices above';
+      msgEl.className   = 'spy-trigger-msg';
+      return;
+    }
+
+    const high = parseFloat(highVal);
+    const cur  = parseFloat(curVal);
+
+    if (isNaN(high) || isNaN(cur) || high <= 0 || cur <= 0) {
+      pctEl.textContent = '—';
+      pctEl.className   = 'spy-calc-pct';
+      msgEl.textContent = 'Enter valid prices';
+      msgEl.className   = 'spy-trigger-msg';
       return;
     }
 
     const pct  = ((cur - high) / high) * 100;
     const sign = pct >= 0 ? '+' : '';
-    pctEl.textContent = `${sign}${pct.toFixed(2)}%`;
+    pctEl.textContent = sign + pct.toFixed(2) + '%';
 
     if (pct >= 0) {
       pctEl.className = 'spy-calc-pct above';
-      msgEl.innerHTML = '✓ Above 3-month high<br><strong>No action needed</strong>';
+      msgEl.innerHTML = 'Above 3-month high — <strong>No action needed</strong>';
       msgEl.className = 'spy-trigger-msg trigger-safe';
     } else if (pct > -10) {
       const needed = (high * 0.90).toFixed(2);
       pctEl.className = 'spy-calc-pct below';
-      msgEl.innerHTML = `<strong>No trigger yet</strong><br>–10% trigger at $${needed}`;
+      msgEl.innerHTML = '<strong>No trigger yet</strong> · –10% at $' + needed;
       msgEl.className = 'spy-trigger-msg trigger-none';
     } else if (pct > -15) {
       pctEl.className = 'spy-calc-pct below';
-      msgEl.innerHTML = '⚡ <strong>–10% triggered</strong><br>Deploy $180 → VTI';
+      msgEl.innerHTML = '<strong>–10% triggered</strong> · Deploy $180 → VTI';
       msgEl.className = 'spy-trigger-msg trigger-10';
     } else if (pct > -25) {
       pctEl.className = 'spy-calc-pct below';
-      msgEl.innerHTML = '🔴 <strong>–15% triggered</strong><br>Deploy $180 → NVDA / MSFT / TSM';
+      msgEl.innerHTML = '<strong>–15% triggered</strong> · Deploy $180 → NVDA / MSFT / TSM';
       msgEl.className = 'spy-trigger-msg trigger-15';
     } else {
       pctEl.className = 'spy-calc-pct below';
-      msgEl.innerHTML = '🚨 <strong>–25%+ triggered</strong><br>Deploy ~$247 → VTI + VXUS + conviction';
+      msgEl.innerHTML = '<strong>–25%+ triggered</strong> · Deploy ~$247 → VTI + VXUS + conviction';
       msgEl.className = 'spy-trigger-msg trigger-25';
     }
   }
