@@ -165,12 +165,18 @@
 
       <div class="spy-context">
         <div class="spy-status-row">
-          <!-- Static SPY status -->
-          <div class="spy-status-card">
-            <div class="spy-status-label">Current SPY Status</div>
-            <div class="spy-status-value">~1.3–2% below 3-month high</div>
-            <div class="spy-status-action green">No action needed</div>
-            <div class="spy-status-date">Feb 24, 2026</div>
+          <!-- Live auto-fetching SPY status -->
+          <div class="spy-live-card">
+            <div class="spy-live-header">
+              <div class="spy-status-label">Live SPY Status</div>
+              <button class="spy-refresh-btn" id="spyRefreshBtn" title="Refresh">↻</button>
+            </div>
+            <div id="spyLiveBody" class="spy-live-body">
+              <div class="spy-live-loading">
+                <div class="spy-live-spinner"></div>
+                <span>Fetching live data…</span>
+              </div>
+            </div>
           </div>
 
           <!-- Interactive calculator -->
@@ -200,7 +206,7 @@
         </div>
 
         <div class="spy-info">
-          <p>Monitor <strong>SPY</strong> (not VTI) for deployment signals. Use the <strong>rolling 3-month high</strong> closing price as the baseline — not strict all-time high. This resets automatically when new highs are made and catches real corrections without leaving you sidelined too long.</p>
+          <p>Monitor <strong>SPY</strong> (not VTI) for deployment signals. Use the <strong>rolling 3-month high</strong> closing price as the baseline — not strict all-time high. Live data fetched from Yahoo Finance · auto-refreshes every 5 minutes.</p>
         </div>
       </div>
 
