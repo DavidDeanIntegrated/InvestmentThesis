@@ -526,6 +526,108 @@ function initRefs() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   LIVE SPY STATUS MODULE
+═══════════════════════════════════════════════════════════════ */
+
+function spyTriggerLabel(pct, high) {
+  if (pct >= 0)       return { text: 'Above 3-mo high — No action needed', cls: 'green' };
+  if (pct > -10)      return { text: 'No trigger yet · –10% at $' + (high * 0.90).toFixed(2), cls: '' };
+  if (pct > -15)      return { text: '–10% triggered · Deploy $180 → VTI', cls: 'orange' };
+  if (pct > -25)      return { text: '–15% triggered · Deploy $180 → NVDA/MSFT/TSM', cls: 'red' };
+  return               { text: '–25%+ triggered · Deploy ~$247 → VTI + VXUS', cls: 'red' };
+}
+
+async function fetchSpyData() {
+  // Yahoo Finance v8 chart API — 3 months of daily closes
+  const url = 'https://query2.finance.yahoo.com/v8/finance/chart/SPY' +
+    '?range=3mo&interval=1d&includePrePost=false';
+
+  const res = await fetch(url, { mode: 'cors' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+
+  const json   = await res.json();
+  const result = json.chart.result[0];
+  const closes = result.indicators.quote[0].close.filter(c => c != null);
+
+  if (!closes.length) throw new Error('No price data returned');
+
+  const current = result.meta.regularMarketPrice;
+  const high3m  = Math.max(...closes);
+  const pct     = ((current - high3m) / high3m) * 100;
+
+  return { current, high3m, pct };
+}
+
+function initSpyLive() {
+  const body       = document.getElementById('spyLiveBody');
+  const refreshBtn = document.getElementById('spyRefreshBtn');
+
+  if (!body || !refreshBtn) return;
+
+  let intervalId = null;
+
+  function showLoading() {
+    body.innerHTML = `
+      <div class="spy-live-loading">
+        <div class="spy-live-spinner"></div>
+        <span>Fetching live data…</span>
+      </div>`;
+    refreshBtn.classList.add('spinning');
+    refreshBtn.disabled = true;
+  }
+
+  function showData(current, high3m, pct) {
+    const sign   = pct >= 0 ? '+' : '';
+    const label  = spyTriggerLabel(pct, high3m);
+    const dClass = pct >= 0 ? 'above' : 'below';
+
+    const now      = new Date();
+    const timeStr  = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const dateStr  = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+    body.innerHTML = `
+      <div class="spy-live-price">$${current.toFixed(2)}</div>
+      <div class="spy-live-sub">3-mo high: $${high3m.toFixed(2)}</div>
+      <div class="spy-live-drawdown ${dClass}">${sign}${pct.toFixed(2)}%</div>
+      <div class="spy-live-action ${label.cls}">${label.text}</div>
+      <div class="spy-live-updated">Updated ${timeStr} · ${dateStr}</div>`;
+  }
+
+  function showError(err) {
+    body.innerHTML = `
+      <div class="spy-live-error">
+        <div class="spy-live-error-msg">Live data unavailable</div>
+        <div class="spy-live-error-sub">Yahoo Finance blocked the request (CORS). Use the calculator → to enter prices manually.</div>
+      </div>`;
+    console.warn('SPY live fetch failed:', err);
+  }
+
+  async function load() {
+    showLoading();
+    try {
+      const { current, high3m, pct } = await fetchSpyData();
+      showData(current, high3m, pct);
+    } catch (err) {
+      showError(err);
+    } finally {
+      refreshBtn.classList.remove('spinning');
+      refreshBtn.disabled = false;
+    }
+  }
+
+  refreshBtn.addEventListener('click', () => {
+    // Reset auto-refresh timer on manual refresh
+    if (intervalId) clearInterval(intervalId);
+    load();
+    intervalId = setInterval(load, 5 * 60 * 1000);
+  });
+
+  // Initial load + auto-refresh every 5 minutes
+  load();
+  intervalId = setInterval(load, 5 * 60 * 1000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
    SPY DRAWDOWN CALCULATOR
 ═══════════════════════════════════════════════════════════════ */
 
@@ -602,6 +704,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initHoldingsTable();
   initAccordion();
   initLadder();
+  initSpyLive();
   initSpyCalc();
   initRules();
   initPriority();
