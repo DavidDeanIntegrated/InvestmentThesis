@@ -1347,6 +1347,79 @@ main {
 }
 
 /* ================================================================
+   LIVE PRICE CELLS
+================================================================ */
+.price-cell {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.change-cell {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.change-cell.positive { color: var(--green); }
+.change-cell.negative { color: var(--red); }
+
+/* Price status indicator in table footer */
+.price-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.price-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.price-status.loading .price-status-dot {
+  background: var(--blue);
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+
+.price-status.live .price-status-dot { background: var(--green); }
+.price-status.live { color: var(--green); }
+
+.price-status.cached .price-status-dot { background: var(--orange); }
+.price-status.cached { color: var(--orange); }
+
+.price-status.error .price-status-dot { background: var(--red); }
+.price-status.error { color: var(--text-muted); }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+
+/* SPY cached data tag */
+.spy-cached-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--orange);
+  background: rgba(251,146,60,0.12);
+  border: 1px solid rgba(251,146,60,0.25);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ================================================================
    UTILITIES
 ================================================================ */
 .green { color: var(--green); }
@@ -1380,6 +1453,11 @@ main {
   .chart-legend { grid-template-columns: 1fr; }
   .stat-pill { padding: 8px 12px; }
   .stat-value { font-size: 0.9rem; }
+  /* Hide live price columns on small screens */
+  .price-cell, .change-cell,
+  .holdings-table th:nth-child(5),
+  .holdings-table th:nth-child(6),
+  .holdings-table tfoot td[colspan="2"]:last-child { display: none; }
 }
 
 /* ================================================================
