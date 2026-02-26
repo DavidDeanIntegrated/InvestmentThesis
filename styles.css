@@ -1165,6 +1165,143 @@ main {
 .rule-body strong { color: var(--text-primary); }
 
 /* ================================================================
+   REBALANCING BUY / SELL GUIDE
+================================================================ */
+.rebal-intro {
+  padding: 20px 24px;
+}
+
+.rebal-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 4px;
+}
+
+.rebal-column {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rebal-buy  { border-top: 3px solid var(--green); }
+.rebal-sell { border-top: 3px solid var(--red); }
+
+.rebal-col-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rebal-col-header h3 {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rebal-col-sub {
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.rebal-col-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.buy-icon {
+  background: rgba(34,197,94,0.15);
+  color: var(--green);
+  border: 1px solid rgba(34,197,94,0.3);
+}
+
+.sell-icon {
+  background: rgba(248,113,113,0.15);
+  color: var(--red);
+  border: 1px solid rgba(248,113,113,0.3);
+}
+
+.rebal-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.rebal-row:last-child { border-bottom: none; }
+
+.rebal-rank {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.rebal-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rebal-row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rebal-ticker {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+}
+
+.rebal-context {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.rebal-note {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.rebal-note strong { color: var(--text-primary); }
+.rebal-note em     { font-style: italic; }
+
+@media (max-width: 900px) {
+  .rebal-columns { grid-template-columns: 1fr; }
+}
+
+/* ================================================================
    REFERENCES
 ================================================================ */
 .refs-list {
@@ -1480,3 +1617,4 @@ main {
 .section:nth-child(6)  { animation-delay: 0.30s; }
 .section:nth-child(7)  { animation-delay: 0.35s; }
 .section:nth-child(8)  { animation-delay: 0.40s; }
+.section:nth-child(9)  { animation-delay: 0.45s; }
