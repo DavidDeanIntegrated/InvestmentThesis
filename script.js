@@ -204,24 +204,56 @@ const RULES = [
   { icon: '📖', title: 'Dalio\'s Bottom Line', body: '"Rebalancing is what turns a bunch of good uncorrelated bets into a truly balanced portfolio that can survive any season of the Big Cycle." It mechanically forces buy-low / sell-high.' },
 ];
 
+// Sub-sleeve target data (computed from HOLDINGS)
+const _qcPct = HOLDINGS.filter(h => ['NVDA','TSM','MSFT'].includes(h.ticker)).reduce((s,h) => s + h.pct, 0);
+const _hcPct = HOLDINGS.filter(h => ['PLTR','RKLB'].includes(h.ticker)).reduce((s,h) => s + h.pct, 0);
+
 const REBAL_GUIDE = {
-  intro: 'When rebalancing, use these specific rules to decide <strong>what to buy</strong> (underweight sleeves) and <strong>what to trim</strong> (overweight sleeves). The goal is to bring every sleeve within \u00b13% of its target without triggering unnecessary taxable events.',
-  buyRules: [
-    { ticker: 'VTI',       context: 'First buy for any equity shortfall',     note: 'Broad market core \u2014 always the default equity purchase. If equities are below 55%, start here.' },
-    { ticker: 'VTV',       context: 'Second buy if value sleeve is light',    note: 'Value tilt. Buy alongside VTI when equities need the most rebuilding (\u22655% below target).' },
-    { ticker: 'VXUS',      context: 'International rebalance buy',            note: 'If international drops below ~5%, add here before quality compounders. Reduces US-only concentration risk.' },
-    { ticker: 'NVDA/TSM/MSFT', context: 'Quality compounder dip buys only',  note: 'Only buy when these names have fallen \u226510% from recent highs. Never chase strength \u2014 they appreciate fast on their own.' },
-    { ticker: 'PLTR/RKLB', context: 'High-conviction opportunistic',         note: 'Only during broad market drawdowns (\u201315%+ SPY). These are volatile \u2014 buy weakness, never strength.' },
-    { ticker: 'GLD',       context: 'Real-assets shortfall',                  note: 'If GLD + BCI combined drop below 14%, prioritize GLD first. It\'s the core devaluation hedge.' },
-    { ticker: 'BCI',       context: 'Commodity sleeve maintenance',           note: 'Secondary real-asset buy. Top up only if GLD is already at target and BCI is below ~3.5%.' },
+  goal: 'Keep the entire <strong>equities sleeve at 55\u201360%</strong> of total portfolio value while maintaining internal balance across sub-sleeves. This prevents any single stock or style from creating a big bias to one of the four drivers (growth, inflation, risk premiums, discount rates) \u2014 exactly as Dalio requires for true diversification.',
+
+  whenToRebalance: [
+    '<strong>Quarterly</strong> (last trading day of Mar / Jun / Sep / Dec), OR',
+    'Anytime any sleeve (including total equities) <strong>drifts >5%</strong> from target, OR',
+    '<strong>Immediately after any SGOV deployment</strong> (to bring total equities back inside 55\u201360%).',
   ],
+
+  subSleeveTargets: [
+    { name: 'VTI (Broad US core)',                    targetRange: '20\u201322%', current: hPct('VTI') + '%',  priority: 'Buy first' },
+    { name: 'VTV (Value)',                            targetRange: '7\u20139%',   current: hPct('VTV') + '%',  priority: 'Buy if under' },
+    { name: 'VXUS (International)',                   targetRange: '6.0%',        current: hPct('VXUS') + '%', priority: 'Hold / Buy if under' },
+    { name: 'Quality Compounders (NVDA+TSM+MSFT)',    targetRange: '14\u201316%', current: _qcPct.toFixed(1) + '%', priority: 'Sell if >17%, Buy if <13%' },
+    { name: 'High Conviction (PLTR+RKLB)',            targetRange: '\u22646.5%',  current: _hcPct.toFixed(1) + '%', priority: 'Sell first if over' },
+  ],
+
   sellRules: [
-    { ticker: 'BTC',       context: 'First to trim when overweight',          note: 'If crypto exceeds 14% of portfolio, trim back toward 12%. BTC appreciates fastest and drifts overweight naturally.' },
-    { ticker: 'PLTR/RKLB', context: 'High-conviction winners',               note: 'If the combined high-conviction sleeve exceeds 8%, trim the larger position. These are the most volatile holdings.' },
-    { ticker: 'NVDA/TSM/MSFT', context: 'Quality compounder trim',           note: 'If quality compounders exceed ~18%, trim the most appreciated name. Rotate proceeds into underweight sleeves.' },
-    { ticker: 'VTI',       context: 'Last resort equity trim',                note: 'Only trim VTI if equities exceed 62% <em>and</em> other equity sub-sleeves are already at target. VTI is the core \u2014 trim reluctantly.' },
-    { ticker: 'GLD',       context: 'Real-asset ceiling',                     note: 'Only if real assets exceed 18%. Rare \u2014 GLD is meant to be held long-term. Redirect proceeds to SGOV or underweight equities.' },
+    '<strong>First:</strong> Trim high-conviction names (PLTR then RKLB) \u2014 they are the most volatile and Dalio warns about valuation compression in late-cycle periods.',
+    '<strong>Second:</strong> Trim quality compounders equally (NVDA, TSM, MSFT) if the group exceeds 17%.',
+    '<strong>Third:</strong> Trim VTI or VTV only as a last resort (they are the most diversified).',
+    'Never sell more than needed to bring total equities back to 60%. Use fractional shares.',
   ],
+
+  buyRules: [
+    '<strong>First:</strong> Add to <strong>VTI</strong> \u2014 this is your broad-market anchor and the cleanest way to restore growth exposure.',
+    '<strong>Second:</strong> Add to <strong>VXUS</strong> if it is below 6%.',
+    '<strong>Third:</strong> Add to <strong>VTV</strong> if value is under 7%.',
+    '<strong>Fourth:</strong> Add to quality compounders (equal split NVDA/TSM/MSFT) only on meaningful dips or if the group is below 14%.',
+    'Never buy PLTR or RKLB during rebalancing \u2014 they are \u201chold and dilute\u201d names.',
+  ],
+
+  specialSituations: [
+    '<strong>After SGOV deployment</strong> (you just bought equities on a dip): Do the full equities rebalance 7\u20138 weeks later unless a >5% drift happens sooner.',
+    '<strong>BTC or Real Assets moving hard:</strong> If BTC or (GLD+BCI) cause total equities to drift, rebalance equities first before touching other sleeves.',
+    '<strong>Portfolio < $5,000:</strong> Keep trades to 1\u20132 tickets max per rebalance to avoid tiny fractional clutter.',
+  ],
+
+  example: {
+    setup: 'Portfolio grows to $4,200 and equities hit 63%.',
+    sell:  'Sell $126 total: $60 PLTR + $40 RKLB + $26 NVDA.',
+    buy:   'Buy $126 into VTI.',
+    result:'Equities back to ~57.5%, internal balance restored.',
+  },
+
+  closing: 'This guide ensures you always <strong>sell what has run the most</strong> and <strong>buy what has lagged</strong> \u2014 Dalio\u2019s mechanical \u201cbuy low / sell high\u201d engine \u2014 while keeping your portfolio All Weather and cycle-resilient.',
 };
 
 const PRIORITY = [
@@ -473,7 +505,7 @@ function initHoldingsTable() {
 ═══════════════════════════════════════════════════════════════ */
 
 async function fetchViaProxy(url) {
-  // Strategy 1: allorigins.win /get endpoint (wraps response in JSON with CORS headers)
+  // Strategy 1: allorigins.win /get endpoint (wraps response in JSON, adds CORS headers)
   try {
     const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
     if (res.ok) {
@@ -482,7 +514,7 @@ async function fetchViaProxy(url) {
     }
   } catch { /* next */ }
 
-  // Strategy 2: corsproxy.org (different service from corsproxy.io)
+  // Strategy 2: corsproxy.org
   try {
     const res = await fetch('https://corsproxy.org/?' + encodeURIComponent(url));
     if (res.ok) return await res.json();
@@ -494,39 +526,75 @@ async function fetchViaProxy(url) {
     if (res.ok) return await res.json();
   } catch { /* next */ }
 
-  // Strategy 4: direct fetch (works in some environments)
-  const res = await fetch(url, { mode: 'cors' });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return await res.json();
+  throw new Error('All proxy strategies failed for: ' + url);
 }
 
-async function fetchTickerPrice(ticker) {
-  const yahooTicker = YAHOO_TICKERS[ticker] || ticker;
-  const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + yahooTicker + '?range=1d&interval=1d&includePrePost=false';
+// Reverse-map Yahoo symbols back to portfolio tickers
+const YAHOO_REVERSE = {};
+Object.entries(YAHOO_TICKERS).forEach(([k, v]) => { YAHOO_REVERSE[v] = k; });
 
-  try {
-    const json = await fetchViaProxy(url);
-    const meta = json.chart.result[0].meta;
+async function fetchAllPricesBatch() {
+  // Build a single comma-separated symbol list for Yahoo's spark endpoint
+  const symbols = HOLDINGS.map(h => YAHOO_TICKERS[h.ticker] || h.ticker).join(',');
+  const url = 'https://query2.finance.yahoo.com/v8/finance/spark?symbols=' + encodeURIComponent(symbols) + '&range=1d&interval=1d';
+
+  const json = await fetchViaProxy(url);
+  const results = {};
+
+  // Spark returns { spark: { result: [ { symbol, response: [{ meta, ... }] } ] } }
+  const items = (json.spark && json.spark.result) || [];
+  for (const item of items) {
+    const yahooSym = item.symbol;
+    const resp = item.response && item.response[0];
+    if (!resp || !resp.meta) continue;
+
+    const meta = resp.meta;
     const price = meta.regularMarketPrice;
     const prevClose = meta.chartPreviousClose || meta.previousClose || price;
-    return {
+    const ticker = YAHOO_REVERSE[yahooSym] || yahooSym;
+
+    results[ticker] = {
       price,
       prevClose,
-      change: ((price - prevClose) / prevClose) * 100,
+      change: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
     };
-  } catch {
-    return null;
   }
+
+  return Object.keys(results).length > 0 ? results : null;
+}
+
+// Fallback: fetch tickers one-by-one sequentially (not in parallel, to avoid rate-limiting)
+async function fetchAllPricesSequential() {
+  const results = {};
+  for (const h of HOLDINGS) {
+    const yahooTicker = YAHOO_TICKERS[h.ticker] || h.ticker;
+    const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + yahooTicker + '?range=1d&interval=1d&includePrePost=false';
+    try {
+      const json = await fetchViaProxy(url);
+      const meta = json.chart.result[0].meta;
+      const price = meta.regularMarketPrice;
+      const prevClose = meta.chartPreviousClose || meta.previousClose || price;
+      results[h.ticker] = {
+        price,
+        prevClose,
+        change: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
+      };
+    } catch {
+      // Skip this ticker, continue with others
+    }
+  }
+  return Object.keys(results).length > 0 ? results : null;
 }
 
 async function fetchAllPrices() {
-  const results = {};
-  const promises = HOLDINGS.map(async (h) => {
-    const data = await fetchTickerPrice(h.ticker);
-    if (data) results[h.ticker] = data;
-  });
-  await Promise.allSettled(promises);
-  return Object.keys(results).length > 0 ? results : null;
+  // Try batch first (1 proxy call), fall back to sequential
+  try {
+    const batch = await fetchAllPricesBatch();
+    if (batch) return batch;
+  } catch {
+    // Batch failed, try sequential
+  }
+  return await fetchAllPricesSequential();
 }
 
 function updateTableWithPrices(prices) {
@@ -675,45 +743,66 @@ function initRebalGuide() {
   const container = document.getElementById('rebalGuide');
   if (!container) return;
 
-  // Intro
-  const intro = document.createElement('div');
-  intro.className = 'rebal-intro summary-card';
-  intro.innerHTML = '<p>' + REBAL_GUIDE.intro + '</p>';
-  container.appendChild(intro);
+  const R = REBAL_GUIDE;
 
-  // Two-column layout: Buys | Sells
-  const grid = document.createElement('div');
-  grid.className = 'rebal-columns';
+  // Helper: create a titled section card
+  function makeSection(title, bodyHTML) {
+    const div = document.createElement('div');
+    div.className = 'rebal-section';
+    div.innerHTML = '<div class="rebal-section-title">' + title + '</div><div class="rebal-section-body">' + bodyHTML + '</div>';
+    return div;
+  }
 
-  // Buy column
-  const buyCol = document.createElement('div');
-  buyCol.className = 'rebal-column rebal-buy';
-  buyCol.innerHTML = '<div class="rebal-col-header"><span class="rebal-col-icon buy-icon">\u2191</span><h3>What to Buy <span class="rebal-col-sub">(underweight sleeves)</span></h3></div>';
+  // Helper: ordered list from array of HTML strings
+  function makeOL(items, cls) {
+    return '<ol class="rebal-ol ' + (cls || '') + '">' + items.map(t => '<li>' + t + '</li>').join('') + '</ol>';
+  }
 
-  REBAL_GUIDE.buyRules.forEach((r, i) => {
-    const row = document.createElement('div');
-    row.className = 'rebal-row';
-    row.innerHTML = '<div class="rebal-rank">' + (i + 1) + '</div>' +
-      '<div class="rebal-row-body"><div class="rebal-row-top"><span class="rebal-ticker">' + r.ticker + '</span><span class="rebal-context">' + r.context + '</span></div><div class="rebal-note">' + r.note + '</div></div>';
-    buyCol.appendChild(row);
+  // 1. Goal
+  const goal = document.createElement('div');
+  goal.className = 'rebal-intro summary-card';
+  goal.innerHTML = '<p><strong>Goal:</strong> ' + R.goal + '</p>';
+  container.appendChild(goal);
+
+  // 2. When to Rebalance
+  container.appendChild(makeSection('When to Rebalance Equities',
+    '<ul class="rebal-ul">' + R.whenToRebalance.map(t => '<li>' + t + '</li>').join('') + '</ul>'
+  ));
+
+  // 3. Step-by-Step Process
+  const stepsHTML = '<p class="rebal-step-intro">Takes 5\u201310 minutes on Robinhood:</p>';
+
+  // Step 1: Calculate
+  const step1 = '<div class="rebal-step"><div class="rebal-step-num">1</div><div class="rebal-step-body"><strong>Calculate current equities %</strong><p>Add up VTI + VTV + VXUS + NVDA + TSM + MSFT + PLTR + RKLB.<br>Target: <strong>55\u201360%</strong> of total portfolio.</p></div></div>';
+
+  // Step 2: Identify Overweights & Underweights (table)
+  let tableRows = '';
+  R.subSleeveTargets.forEach(s => {
+    tableRows += '<tr><td>' + s.name + '</td><td>' + s.targetRange + '</td><td>' + s.current + '</td><td>' + s.priority + '</td></tr>';
   });
+  const step2 = '<div class="rebal-step"><div class="rebal-step-num">2</div><div class="rebal-step-body"><strong>Identify Overweights &amp; Underweights</strong> (inside equities)<div class="rebal-table-wrap"><table class="rebal-table"><thead><tr><th>Sub-Sleeve</th><th>Target % of Total</th><th>Current (as of Feb 24)</th><th>Action Priority</th></tr></thead><tbody>' + tableRows + '</tbody></table></div></div></div>';
 
-  // Sell column
-  const sellCol = document.createElement('div');
-  sellCol.className = 'rebal-column rebal-sell';
-  sellCol.innerHTML = '<div class="rebal-col-header"><span class="rebal-col-icon sell-icon">\u2193</span><h3>What to Trim <span class="rebal-col-sub">(overweight sleeves)</span></h3></div>';
+  // Step 3: Sell Rules
+  const step3 = '<div class="rebal-step"><div class="rebal-step-num">3</div><div class="rebal-step-body"><strong>Sell Rules</strong> (in this exact order)' + makeOL(R.sellRules, 'rebal-sell-list') + '</div></div>';
 
-  REBAL_GUIDE.sellRules.forEach((r, i) => {
-    const row = document.createElement('div');
-    row.className = 'rebal-row';
-    row.innerHTML = '<div class="rebal-rank">' + (i + 1) + '</div>' +
-      '<div class="rebal-row-body"><div class="rebal-row-top"><span class="rebal-ticker">' + r.ticker + '</span><span class="rebal-context">' + r.context + '</span></div><div class="rebal-note">' + r.note + '</div></div>';
-    sellCol.appendChild(row);
-  });
+  // Step 4: Buy Rules
+  const step4 = '<div class="rebal-step"><div class="rebal-step-num">4</div><div class="rebal-step-body"><strong>Buy Rules</strong> (in this exact order)' + makeOL(R.buyRules, 'rebal-buy-list') + '</div></div>';
 
-  grid.appendChild(buyCol);
-  grid.appendChild(sellCol);
-  container.appendChild(grid);
+  // Step 5: Special Situations
+  const step5 = '<div class="rebal-step"><div class="rebal-step-num">5</div><div class="rebal-step-body"><strong>Special Situations</strong><ul class="rebal-ul">' + R.specialSituations.map(t => '<li>' + t + '</li>').join('') + '</ul></div></div>';
+
+  container.appendChild(makeSection('Step-by-Step Process', stepsHTML + step1 + step2 + step3 + step4 + step5));
+
+  // 4. Example
+  const ex = R.example;
+  const exampleHTML = '<div class="rebal-example"><div class="rebal-example-label">Example (hypothetical)</div><p>' + ex.setup + '</p><p class="rebal-example-sell">\u2192 ' + ex.sell + '</p><p class="rebal-example-buy">\u2192 ' + ex.buy + '</p><p class="rebal-example-result">\u2192 ' + ex.result + '</p></div>';
+  container.appendChild(makeSection('', exampleHTML));
+
+  // 5. Closing
+  const closing = document.createElement('div');
+  closing.className = 'rebal-closing summary-card';
+  closing.innerHTML = '<p>' + R.closing + '</p>';
+  container.appendChild(closing);
 }
 
 /* ═══════════════════════════════════════════════════════════════
