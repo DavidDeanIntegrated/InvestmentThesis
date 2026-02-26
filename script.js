@@ -204,6 +204,26 @@ const RULES = [
   { icon: '📖', title: 'Dalio\'s Bottom Line', body: '"Rebalancing is what turns a bunch of good uncorrelated bets into a truly balanced portfolio that can survive any season of the Big Cycle." It mechanically forces buy-low / sell-high.' },
 ];
 
+const REBAL_GUIDE = {
+  intro: 'When rebalancing, use these specific rules to decide <strong>what to buy</strong> (underweight sleeves) and <strong>what to trim</strong> (overweight sleeves). The goal is to bring every sleeve within \u00b13% of its target without triggering unnecessary taxable events.',
+  buyRules: [
+    { ticker: 'VTI',       context: 'First buy for any equity shortfall',     note: 'Broad market core \u2014 always the default equity purchase. If equities are below 55%, start here.' },
+    { ticker: 'VTV',       context: 'Second buy if value sleeve is light',    note: 'Value tilt. Buy alongside VTI when equities need the most rebuilding (\u22655% below target).' },
+    { ticker: 'VXUS',      context: 'International rebalance buy',            note: 'If international drops below ~5%, add here before quality compounders. Reduces US-only concentration risk.' },
+    { ticker: 'NVDA/TSM/MSFT', context: 'Quality compounder dip buys only',  note: 'Only buy when these names have fallen \u226510% from recent highs. Never chase strength \u2014 they appreciate fast on their own.' },
+    { ticker: 'PLTR/RKLB', context: 'High-conviction opportunistic',         note: 'Only during broad market drawdowns (\u201315%+ SPY). These are volatile \u2014 buy weakness, never strength.' },
+    { ticker: 'GLD',       context: 'Real-assets shortfall',                  note: 'If GLD + BCI combined drop below 14%, prioritize GLD first. It\'s the core devaluation hedge.' },
+    { ticker: 'BCI',       context: 'Commodity sleeve maintenance',           note: 'Secondary real-asset buy. Top up only if GLD is already at target and BCI is below ~3.5%.' },
+  ],
+  sellRules: [
+    { ticker: 'BTC',       context: 'First to trim when overweight',          note: 'If crypto exceeds 14% of portfolio, trim back toward 12%. BTC appreciates fastest and drifts overweight naturally.' },
+    { ticker: 'PLTR/RKLB', context: 'High-conviction winners',               note: 'If the combined high-conviction sleeve exceeds 8%, trim the larger position. These are the most volatile holdings.' },
+    { ticker: 'NVDA/TSM/MSFT', context: 'Quality compounder trim',           note: 'If quality compounders exceed ~18%, trim the most appreciated name. Rotate proceeds into underweight sleeves.' },
+    { ticker: 'VTI',       context: 'Last resort equity trim',                note: 'Only trim VTI if equities exceed 62% <em>and</em> other equity sub-sleeves are already at target. VTI is the core \u2014 trim reluctantly.' },
+    { ticker: 'GLD',       context: 'Real-asset ceiling',                     note: 'Only if real assets exceed 18%. Rare \u2014 GLD is meant to be held long-term. Redirect proceeds to SGOV or underweight equities.' },
+  ],
+};
+
 const PRIORITY = [
   { rank: 1, ticker: 'SGOV',         desc: 'Until back at <strong>15.7% target</strong>' },
   { rank: 2, ticker: 'VTI / VXUS',   desc: 'Maintain core equity balance' },
@@ -452,34 +472,51 @@ function initHoldingsTable() {
    LIVE MARKET PRICES
 ═══════════════════════════════════════════════════════════════ */
 
+async function fetchViaProxy(url) {
+  // Strategy 1: allorigins.win /get endpoint (wraps response in JSON with CORS headers)
+  try {
+    const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+    if (res.ok) {
+      const wrapper = await res.json();
+      return JSON.parse(wrapper.contents);
+    }
+  } catch { /* next */ }
+
+  // Strategy 2: corsproxy.org (different service from corsproxy.io)
+  try {
+    const res = await fetch('https://corsproxy.org/?' + encodeURIComponent(url));
+    if (res.ok) return await res.json();
+  } catch { /* next */ }
+
+  // Strategy 3: api.codetabs.com proxy
+  try {
+    const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url));
+    if (res.ok) return await res.json();
+  } catch { /* next */ }
+
+  // Strategy 4: direct fetch (works in some environments)
+  const res = await fetch(url, { mode: 'cors' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
 async function fetchTickerPrice(ticker) {
   const yahooTicker = YAHOO_TICKERS[ticker] || ticker;
   const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + yahooTicker + '?range=1d&interval=1d&includePrePost=false';
 
-  const strategies = [
-    () => fetch(url, { mode: 'cors' }),
-    () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)),
-    () => fetch('https://corsproxy.io/?' + encodeURIComponent(url)),
-  ];
-
-  for (const tryFetch of strategies) {
-    try {
-      const res = await tryFetch();
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const json = await res.json();
-      const meta = json.chart.result[0].meta;
-      const price = meta.regularMarketPrice;
-      const prevClose = meta.chartPreviousClose || meta.previousClose || price;
-      return {
-        price,
-        prevClose,
-        change: ((price - prevClose) / prevClose) * 100,
-      };
-    } catch {
-      // Try next strategy
-    }
+  try {
+    const json = await fetchViaProxy(url);
+    const meta = json.chart.result[0].meta;
+    const price = meta.regularMarketPrice;
+    const prevClose = meta.chartPreviousClose || meta.previousClose || price;
+    return {
+      price,
+      prevClose,
+      change: ((price - prevClose) / prevClose) * 100,
+    };
+  } catch {
+    return null;
   }
-  return null;
 }
 
 async function fetchAllPrices() {
@@ -631,6 +668,55 @@ function initRules() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   REBALANCING BUY / SELL GUIDE
+═══════════════════════════════════════════════════════════════ */
+
+function initRebalGuide() {
+  const container = document.getElementById('rebalGuide');
+  if (!container) return;
+
+  // Intro
+  const intro = document.createElement('div');
+  intro.className = 'rebal-intro summary-card';
+  intro.innerHTML = '<p>' + REBAL_GUIDE.intro + '</p>';
+  container.appendChild(intro);
+
+  // Two-column layout: Buys | Sells
+  const grid = document.createElement('div');
+  grid.className = 'rebal-columns';
+
+  // Buy column
+  const buyCol = document.createElement('div');
+  buyCol.className = 'rebal-column rebal-buy';
+  buyCol.innerHTML = '<div class="rebal-col-header"><span class="rebal-col-icon buy-icon">\u2191</span><h3>What to Buy <span class="rebal-col-sub">(underweight sleeves)</span></h3></div>';
+
+  REBAL_GUIDE.buyRules.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'rebal-row';
+    row.innerHTML = '<div class="rebal-rank">' + (i + 1) + '</div>' +
+      '<div class="rebal-row-body"><div class="rebal-row-top"><span class="rebal-ticker">' + r.ticker + '</span><span class="rebal-context">' + r.context + '</span></div><div class="rebal-note">' + r.note + '</div></div>';
+    buyCol.appendChild(row);
+  });
+
+  // Sell column
+  const sellCol = document.createElement('div');
+  sellCol.className = 'rebal-column rebal-sell';
+  sellCol.innerHTML = '<div class="rebal-col-header"><span class="rebal-col-icon sell-icon">\u2193</span><h3>What to Trim <span class="rebal-col-sub">(overweight sleeves)</span></h3></div>';
+
+  REBAL_GUIDE.sellRules.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'rebal-row';
+    row.innerHTML = '<div class="rebal-rank">' + (i + 1) + '</div>' +
+      '<div class="rebal-row-body"><div class="rebal-row-top"><span class="rebal-ticker">' + r.ticker + '</span><span class="rebal-context">' + r.context + '</span></div><div class="rebal-note">' + r.note + '</div></div>';
+    sellCol.appendChild(row);
+  });
+
+  grid.appendChild(buyCol);
+  grid.appendChild(sellCol);
+  container.appendChild(grid);
+}
+
+/* ═══════════════════════════════════════════════════════════════
    PRIORITY LIST
 ═══════════════════════════════════════════════════════════════ */
 
@@ -673,37 +759,19 @@ function spyTriggerLabel(pct, high) {
 async function fetchSpyData() {
   const yahooUrl = 'https://query2.finance.yahoo.com/v8/finance/chart/SPY?range=3mo&interval=1d&includePrePost=false';
 
-  const strategies = [
-    () => fetch(yahooUrl, { mode: 'cors' }),
-    () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooUrl)),
-    () => fetch('https://corsproxy.io/?' + encodeURIComponent(yahooUrl)),
-  ];
+  const json   = await fetchViaProxy(yahooUrl);
+  const result = json.chart.result[0];
+  const closes = result.indicators.quote[0].close.filter(c => c != null);
 
-  let lastErr;
-  for (const tryFetch of strategies) {
-    try {
-      const res = await tryFetch();
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+  if (!closes.length) throw new Error('No price data returned');
 
-      const json   = await res.json();
-      const result = json.chart.result[0];
-      const closes = result.indicators.quote[0].close.filter(c => c != null);
+  const current = result.meta.regularMarketPrice;
+  const high3m  = Math.max(...closes);
+  const pct     = ((current - high3m) / high3m) * 100;
 
-      if (!closes.length) throw new Error('No price data returned');
-
-      const current = result.meta.regularMarketPrice;
-      const high3m  = Math.max(...closes);
-      const pct     = ((current - high3m) / high3m) * 100;
-
-      const data = { current, high3m, pct };
-      setCache('spy', data);
-      return data;
-    } catch (err) {
-      lastErr = err;
-    }
-  }
-
-  throw lastErr;
+  const data = { current, high3m, pct };
+  setCache('spy', data);
+  return data;
 }
 
 function initSpyLive() {
@@ -859,6 +927,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSpyLive();
   initSpyCalc();
   initRules();
+  initRebalGuide();
   initPriority();
   initRefs();
   initLivePrices();
