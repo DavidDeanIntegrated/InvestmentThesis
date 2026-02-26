@@ -538,24 +538,42 @@ function spyTriggerLabel(pct, high) {
 }
 
 async function fetchSpyData() {
-  // Yahoo Finance v8 chart API — 3 months of daily closes
-  const url = 'https://query2.finance.yahoo.com/v8/finance/chart/SPY' +
+  const yahooUrl = 'https://query2.finance.yahoo.com/v8/finance/chart/SPY' +
     '?range=3mo&interval=1d&includePrePost=false';
 
-  const res = await fetch(url, { mode: 'cors' });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
+  // Strategy 1: direct fetch (works when Yahoo allows CORS)
+  // Strategy 2: allorigins.win proxy (fetches server-side, returns with CORS)
+  // Strategy 3: corsproxy.io proxy
+  const strategies = [
+    () => fetch(yahooUrl, { mode: 'cors' }),
+    () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(yahooUrl)),
+    () => fetch('https://corsproxy.io/?' + encodeURIComponent(yahooUrl)),
+  ];
 
-  const json   = await res.json();
-  const result = json.chart.result[0];
-  const closes = result.indicators.quote[0].close.filter(c => c != null);
+  let lastErr;
+  for (const tryFetch of strategies) {
+    try {
+      const res = await tryFetch();
+      if (!res.ok) throw new Error('HTTP ' + res.status);
 
-  if (!closes.length) throw new Error('No price data returned');
+      const json   = await res.json();
+      const result = json.chart.result[0];
+      const closes = result.indicators.quote[0].close.filter(c => c != null);
 
-  const current = result.meta.regularMarketPrice;
-  const high3m  = Math.max(...closes);
-  const pct     = ((current - high3m) / high3m) * 100;
+      if (!closes.length) throw new Error('No price data returned');
 
-  return { current, high3m, pct };
+      const current = result.meta.regularMarketPrice;
+      const high3m  = Math.max(...closes);
+      const pct     = ((current - high3m) / high3m) * 100;
+
+      return { current, high3m, pct };
+    } catch (err) {
+      lastErr = err;
+      // Try next strategy
+    }
+  }
+
+  throw lastErr;
 }
 
 function initSpyLive() {
