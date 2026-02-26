@@ -3,9 +3,12 @@
 /* ═══════════════════════════════════════════════════════════════
    PORTFOLIO CONFIGURATION — Single Source of Truth
    ───────────────────────────────────────────────────────────────
-   To update your portfolio: change dollar values in HOLDINGS and
-   update PORTFOLIO_DATE. Everything else (percentages, totals,
-   sleeve allocations, HTML text) computes automatically.
+   To update your portfolio:
+   1. Update PORTFOLIO_DATE
+   2. Update `shares` in HOLDINGS with your actual share counts
+   3. Update `dollar` with the position values on that date
+   Everything else computes automatically.
+   When live prices are available, values update in real-time.
 ═══════════════════════════════════════════════════════════════ */
 
 const PORTFOLIO_DATE = 'February 24, 2026';
@@ -25,29 +28,45 @@ const SLEEVE_COLORS = {
 // Yahoo Finance ticker mapping (only for tickers that differ)
 const YAHOO_TICKERS = { 'BTC': 'BTC-USD' };
 
+// shares = exact share count from Robinhood (update these when you update the portfolio)
+// dollar = position value as of PORTFOLIO_DATE (used as fallback when live prices unavailable)
 const HOLDINGS = [
-  { ticker: 'VTI',  sleeve: 'Broad Market',       dollar: 808.55 },
-  { ticker: 'SGOV', sleeve: 'Dry Powder',          dollar: 607.12 },
-  { ticker: 'BTC',  sleeve: 'Crypto',              dollar: 458.95 },
-  { ticker: 'GLD',  sleeve: 'Gold',                dollar: 392.89 },
-  { ticker: 'VTV',  sleeve: 'Value',               dollar: 308.73 },
-  { ticker: 'VXUS', sleeve: 'International',       dollar: 227.92 },
-  { ticker: 'NVDA', sleeve: 'Quality Compounder',  dollar: 205.97 },
-  { ticker: 'TSM',  sleeve: 'Quality Compounder',  dollar: 190.03 },
-  { ticker: 'MSFT', sleeve: 'Quality Compounder',  dollar: 181.23 },
-  { ticker: 'BCI',  sleeve: 'Commodity',           dollar: 151.76 },
-  { ticker: 'PLTR', sleeve: 'High Conviction',     dollar: 133.93 },
-  { ticker: 'RKLB', sleeve: 'High Conviction',     dollar: 118.90 },
+  { ticker: 'VTI',  sleeve: 'Broad Market',       shares: 2.788,    dollar: 808.55 },
+  { ticker: 'SGOV', sleeve: 'Dry Powder',          shares: 6.041,    dollar: 607.12 },
+  { ticker: 'BTC',  sleeve: 'Crypto',              shares: 0.005275, dollar: 458.95 },
+  { ticker: 'GLD',  sleeve: 'Gold',                shares: 1.482,    dollar: 392.89 },
+  { ticker: 'VTV',  sleeve: 'Value',               shares: 1.816,    dollar: 308.73 },
+  { ticker: 'VXUS', sleeve: 'International',       shares: 3.799,    dollar: 227.92 },
+  { ticker: 'NVDA', sleeve: 'Quality Compounder',  shares: 1.584,    dollar: 205.97 },
+  { ticker: 'TSM',  sleeve: 'Quality Compounder',  shares: 0.975,    dollar: 190.03 },
+  { ticker: 'MSFT', sleeve: 'Quality Compounder',  shares: 0.4475,   dollar: 181.23 },
+  { ticker: 'BCI',  sleeve: 'Commodity',           shares: 5.621,    dollar: 151.76 },
+  { ticker: 'PLTR', sleeve: 'High Conviction',     shares: 1.252,    dollar: 133.93 },
+  { ticker: 'RKLB', sleeve: 'High Conviction',     shares: 3.963,    dollar: 118.90 },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
    COMPUTED VALUES — derived automatically from HOLDINGS
+   These are recalculated when live prices arrive.
 ═══════════════════════════════════════════════════════════════ */
 
-const PORTFOLIO_TOTAL = HOLDINGS.reduce((sum, h) => sum + h.dollar, 0);
+let PORTFOLIO_TOTAL = HOLDINGS.reduce((sum, h) => sum + h.dollar, 0);
 const PORTFOLIO_COUNT = HOLDINGS.length;
 
-// Compute allocation percentages from dollar values
+function recomputePortfolioMath() {
+  PORTFOLIO_TOTAL = HOLDINGS.reduce((sum, h) => sum + h.dollar, 0);
+  HOLDINGS.forEach(h => {
+    h.pct = (h.dollar / PORTFOLIO_TOTAL) * 100;
+  });
+  SLEEVES.forEach(s => {
+    const members = SLEEVE_GROUPS[s.name] || [];
+    s.currentPct = HOLDINGS
+      .filter(h => members.includes(h.sleeve))
+      .reduce((sum, h) => sum + h.pct, 0);
+  });
+}
+
+// Initial computation
 HOLDINGS.forEach(h => {
   h.pct = (h.dollar / PORTFOLIO_TOTAL) * 100;
 });
@@ -399,13 +418,15 @@ function syncDynamicValues() {
    CHART
 ═══════════════════════════════════════════════════════════════ */
 
+let chartInstance = null;
+
 function initChart() {
   const labels  = HOLDINGS.map(h => h.ticker);
   const data    = HOLDINGS.map(h => h.pct);
   const dollars = HOLDINGS.map(h => h.dollar);
   const colors  = HOLDINGS.map(h => SLEEVE_COLORS[h.sleeve] ?? '#6b7280');
 
-  new Chart(document.getElementById('currentChart'), {
+  chartInstance = new Chart(document.getElementById('currentChart'), {
     type: 'doughnut',
     data: {
       labels,
@@ -563,38 +584,9 @@ async function fetchAllPricesBatch() {
   return Object.keys(results).length > 0 ? results : null;
 }
 
-// Fallback: fetch tickers one-by-one sequentially (not in parallel, to avoid rate-limiting)
-async function fetchAllPricesSequential() {
-  const results = {};
-  for (const h of HOLDINGS) {
-    const yahooTicker = YAHOO_TICKERS[h.ticker] || h.ticker;
-    const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + yahooTicker + '?range=1d&interval=1d&includePrePost=false';
-    try {
-      const json = await fetchViaProxy(url);
-      const meta = json.chart.result[0].meta;
-      const price = meta.regularMarketPrice;
-      const prevClose = meta.chartPreviousClose || meta.previousClose || price;
-      results[h.ticker] = {
-        price,
-        prevClose,
-        change: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
-      };
-    } catch {
-      // Skip this ticker, continue with others
-    }
-  }
-  return Object.keys(results).length > 0 ? results : null;
-}
-
 async function fetchAllPrices() {
-  // Try batch first (1 proxy call), fall back to sequential
-  try {
-    const batch = await fetchAllPricesBatch();
-    if (batch) return batch;
-  } catch {
-    // Batch failed, try sequential
-  }
-  return await fetchAllPricesSequential();
+  // Single batch request only — no sequential fallback (avoids 12+ failing CORS requests)
+  return await fetchAllPricesBatch();
 }
 
 function updateTableWithPrices(prices) {
@@ -636,10 +628,91 @@ function showPriceStatus(state, detail) {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   RECALCULATE PORTFOLIO FROM LIVE PRICES
+   When live prices arrive, recompute dollar values from share
+   counts, then refresh all UI elements: chart, sleeve bars,
+   table, header stats, callouts, etc.
+═══════════════════════════════════════════════════════════════ */
+
+function recalculatePortfolio(prices) {
+  if (!prices) return;
+
+  let anyUpdated = false;
+
+  // Update dollar values from shares * live price
+  HOLDINGS.forEach(h => {
+    const data = prices[h.ticker];
+    if (data && data.price && h.shares) {
+      h.dollar = h.shares * data.price;
+      anyUpdated = true;
+    }
+  });
+
+  if (!anyUpdated) return;
+
+  // Recompute all percentages and totals
+  recomputePortfolioMath();
+
+  // Update all HTML text (header, footer, stats, callouts, etc.)
+  syncDynamicValues();
+
+  // Update holdings table values and percentages
+  HOLDINGS.forEach(h => {
+    const row = document.querySelector('tr[data-ticker="' + h.ticker + '"]');
+    if (!row) return;
+    const dollarCell = row.querySelector('.dollar-cell');
+    const pctCell = row.querySelector('.pct-cell');
+    if (dollarCell) dollarCell.textContent = '$' + fmt(h.dollar);
+    if (pctCell) pctCell.textContent = h.pct.toFixed(1) + '%';
+  });
+
+  // Update table footer total
+  const tfootTotal = document.getElementById('tableTotalValue');
+  if (tfootTotal) tfootTotal.innerHTML = '<strong>$' + fmtWhole(PORTFOLIO_TOTAL) + '</strong>';
+
+  // Update chart
+  if (chartInstance) {
+    chartInstance.data.datasets[0].data = HOLDINGS.map(h => h.pct);
+    // Update tooltip dollar values
+    const dollars = HOLDINGS.map(h => h.dollar);
+    const data = HOLDINGS.map(h => h.pct);
+    chartInstance.options.plugins.tooltip.callbacks.label = (item) => {
+      const i = item.dataIndex;
+      return ' $' + fmt(dollars[i]) + '  (' + data[i].toFixed(1) + '%)';
+    };
+    chartInstance.update('none'); // no animation for live update
+  }
+
+  // Update chart center label
+  const centerVal = document.querySelector('.chart-center-value');
+  if (centerVal) centerVal.textContent = '$' + fmtWhole(PORTFOLIO_TOTAL);
+
+  // Update legend
+  const legendEl = document.getElementById('currentLegend');
+  if (legendEl) {
+    const legendItems = legendEl.querySelectorAll('.legend-item');
+    legendItems.forEach((item, i) => {
+      const dollarSpan = item.querySelector('.legend-dollar');
+      const pctSpan = item.querySelector('.legend-pct');
+      if (dollarSpan) dollarSpan.textContent = '$' + fmt(HOLDINGS[i].dollar);
+      if (pctSpan) pctSpan.textContent = HOLDINGS[i].pct.toFixed(1) + '%';
+    });
+  }
+
+  // Rebuild sleeve bars
+  const sleeveBarsEl = document.getElementById('sleeveBars');
+  if (sleeveBarsEl) {
+    sleeveBarsEl.innerHTML = '';
+    initSleeveBars();
+  }
+}
+
 async function initLivePrices() {
   // Show cached data immediately if available
   const cached = getCache('prices');
   if (cached && cached.data) {
+    recalculatePortfolio(cached.data);
     updateTableWithPrices(cached.data);
     showPriceStatus('cached', formatCacheAge(cached.age));
   } else {
@@ -651,6 +724,7 @@ async function initLivePrices() {
     const prices = await fetchAllPrices();
     if (prices) {
       setCache('prices', prices);
+      recalculatePortfolio(prices);
       updateTableWithPrices(prices);
       showPriceStatus('live', 'just now');
     } else if (!cached) {
@@ -912,7 +986,7 @@ function initSpyLive() {
       } else {
         showError();
       }
-      console.warn('SPY live fetch failed:', err);
+      // CORS proxy failures are expected — silently fall back to cache
     } finally {
       refreshBtn.classList.remove('spinning');
       refreshBtn.disabled = false;
