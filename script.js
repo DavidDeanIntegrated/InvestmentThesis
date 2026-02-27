@@ -32,7 +32,7 @@ const YAHOO_TICKERS = { 'BTC': 'BTC-USD' };
 // shares = exact share count from Robinhood
 // dollar = position value as of PORTFOLIO_DATE (fallback when live prices unavailable)
 const HOLDINGS = [
-  { ticker: 'BTC',  sleeve: 'Crypto',              shares: null,       dollar: 808.37 },
+  { ticker: 'BTC',  sleeve: 'Crypto',              shares: 0.00716019, dollar: 808.37 },
   { ticker: 'VTI',  sleeve: 'Broad Market',        shares: 2.385068,   dollar: 808.37 },
   { ticker: 'SGOV', sleeve: 'Dry Powder',           shares: 6.034963,   dollar: 607.24 },
   { ticker: 'GLD',  sleeve: 'Gold',                 shares: 0.833679,   dollar: 396.98 },
