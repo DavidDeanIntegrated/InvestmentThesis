@@ -5,10 +5,9 @@
    ───────────────────────────────────────────────────────────────
    To update your portfolio:
    1. Update PORTFOLIO_DATE
-   2. Update `shares` in HOLDINGS with your actual share counts
-   3. Update `dollar` with the position values on that date
+   2. Update `dollar` in HOLDINGS with position values on that date
    Everything else computes automatically.
-   When live prices are available, values update in real-time.
+   Live prices are shown in the Price/Day columns.
 ═══════════════════════════════════════════════════════════════ */
 
 const PORTFOLIO_DATE = 'February 26, 2026';
@@ -28,43 +27,28 @@ const SLEEVE_COLORS = {
 // Yahoo Finance ticker mapping (only for tickers that differ)
 const YAHOO_TICKERS = { 'BTC': 'BTC-USD' };
 
-// shares = exact share count from Robinhood (update these when you update the portfolio)
-// dollar = position value as of PORTFOLIO_DATE (used as fallback when live prices unavailable)
+// dollar = position value as of PORTFOLIO_DATE
 const HOLDINGS = [
-  { ticker: 'BTC',  sleeve: 'Crypto',              shares: 0.005275, dollar: 808.37 },
-  { ticker: 'VTI',  sleeve: 'Broad Market',       shares: 2.788,    dollar: 808.37 },
-  { ticker: 'SGOV', sleeve: 'Dry Powder',          shares: 6.041,    dollar: 607.24 },
-  { ticker: 'GLD',  sleeve: 'Gold',                shares: 1.482,    dollar: 396.98 },
-  { ticker: 'VTV',  sleeve: 'Value',               shares: 1.816,    dollar: 310.01 },
-  { ticker: 'VXUS', sleeve: 'International',       shares: 3.799,    dollar: 229.28 },
-  { ticker: 'NVDA', sleeve: 'Quality Compounder',  shares: 1.584,    dollar: 197.93 },
-  { ticker: 'TSM',  sleeve: 'Quality Compounder',  shares: 0.975,    dollar: 185.54 },
-  { ticker: 'MSFT', sleeve: 'Quality Compounder',  shares: 0.4475,   dollar: 185.49 },
-  { ticker: 'BCI',  sleeve: 'Commodity',           shares: 5.621,    dollar: 152.01 },
-  { ticker: 'PLTR', sleeve: 'High Conviction',     shares: 1.252,    dollar: 141.64 },
-  { ticker: 'RKLB', sleeve: 'High Conviction',     shares: 3.963,    dollar: 117.71 },
+  { ticker: 'BTC',  sleeve: 'Crypto',              dollar: 808.37 },
+  { ticker: 'VTI',  sleeve: 'Broad Market',        dollar: 808.37 },
+  { ticker: 'SGOV', sleeve: 'Dry Powder',           dollar: 607.24 },
+  { ticker: 'GLD',  sleeve: 'Gold',                 dollar: 396.98 },
+  { ticker: 'VTV',  sleeve: 'Value',                dollar: 310.01 },
+  { ticker: 'VXUS', sleeve: 'International',        dollar: 229.28 },
+  { ticker: 'NVDA', sleeve: 'Quality Compounder',   dollar: 197.93 },
+  { ticker: 'TSM',  sleeve: 'Quality Compounder',   dollar: 185.54 },
+  { ticker: 'MSFT', sleeve: 'Quality Compounder',   dollar: 185.49 },
+  { ticker: 'BCI',  sleeve: 'Commodity',             dollar: 152.01 },
+  { ticker: 'PLTR', sleeve: 'High Conviction',      dollar: 141.64 },
+  { ticker: 'RKLB', sleeve: 'High Conviction',      dollar: 117.71 },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
    COMPUTED VALUES — derived automatically from HOLDINGS
-   These are recalculated when live prices arrive.
 ═══════════════════════════════════════════════════════════════ */
 
-let PORTFOLIO_TOTAL = HOLDINGS.reduce((sum, h) => sum + h.dollar, 0);
+const PORTFOLIO_TOTAL = HOLDINGS.reduce((sum, h) => sum + h.dollar, 0);
 const PORTFOLIO_COUNT = HOLDINGS.length;
-
-function recomputePortfolioMath() {
-  PORTFOLIO_TOTAL = HOLDINGS.reduce((sum, h) => sum + h.dollar, 0);
-  HOLDINGS.forEach(h => {
-    h.pct = (h.dollar / PORTFOLIO_TOTAL) * 100;
-  });
-  SLEEVES.forEach(s => {
-    const members = SLEEVE_GROUPS[s.name] || [];
-    s.currentPct = HOLDINGS
-      .filter(h => members.includes(h.sleeve))
-      .reduce((sum, h) => sum + h.pct, 0);
-  });
-}
 
 // Initial computation
 HOLDINGS.forEach(h => {
@@ -236,6 +220,11 @@ const REBAL_GUIDE = {
     '<strong>Immediately after any SGOV deployment</strong> (to bring total equities back inside 55\u201360%).',
   ],
 
+  rebalanceTypes: [
+    '<strong>Portfolio-level</strong> (total equities <strong>outside</strong> 55\u201360%): Money must leave or enter the equities sleeve.',
+    '<strong>Internal only</strong> (total equities <strong>inside</strong> 55\u201360% but sub-sleeves imbalanced): Shift money <strong>within</strong> equities only.',
+  ],
+
   subSleeveTargets: [
     { name: 'VTI (Broad US core)',                    targetRange: '20\u201322%', current: hPct('VTI') + '%',  priority: 'Buy first' },
     { name: 'VTV (Value)',                            targetRange: '7\u20139%',   current: hPct('VTV') + '%',  priority: 'Buy if under' },
@@ -245,34 +234,65 @@ const REBAL_GUIDE = {
   ],
 
   sellRules: [
-    '<strong>First:</strong> Trim high-conviction names (PLTR then RKLB) \u2014 they are the most volatile and Dalio warns about valuation compression in late-cycle periods.',
-    '<strong>Second:</strong> Trim quality compounders equally (NVDA, TSM, MSFT) if the group exceeds 17%.',
-    '<strong>Third:</strong> Trim VTI or VTV only as a last resort (they are the most diversified).',
-    'Never sell more than needed to bring total equities back to 60%. Use fractional shares.',
+    '<strong>First:</strong> Trim high-conviction names (PLTR then RKLB) \u2014 most volatile, highest valuation risk in late-cycle.',
+    '<strong>Second:</strong> Trim quality compounders equally (NVDA / TSM / MSFT) if group >17%.',
+    '<strong>Third:</strong> Trim VTI or VTV only as last resort (most diversified).',
+    'Never sell more than needed. Use fractional shares.',
   ],
 
-  buyRules: [
-    '<strong>First:</strong> Add to <strong>VTI</strong> \u2014 this is your broad-market anchor and the cleanest way to restore growth exposure.',
-    '<strong>Second:</strong> Add to <strong>VXUS</strong> if it is below 6%.',
-    '<strong>Third:</strong> Add to <strong>VTV</strong> if value is under 7%.',
-    '<strong>Fourth:</strong> Add to quality compounders (equal split NVDA/TSM/MSFT) only on meaningful dips or if the group is below 14%.',
-    'Never buy PLTR or RKLB during rebalancing \u2014 they are \u201chold and dilute\u201d names.',
+  buyRulesPortfolio: [
+    'Buy <strong>non-equities</strong> first: SGOV (if under target), then BCI/GLD (if under 14\u201316%).',
+  ],
+
+  buyRulesInternal: [
+    '<strong>First:</strong> Add to <strong>VTI</strong> (broad anchor).',
+    '<strong>Second:</strong> Add to <strong>VXUS</strong> if below 6%.',
+    '<strong>Third:</strong> Add to <strong>VTV</strong> if below 7%.',
+    '<strong>Fourth:</strong> Add to quality compounders (equal split NVDA/TSM/MSFT) only on meaningful dips or if group <13%.',
+    '<strong>Never</strong> buy PLTR or RKLB during rebalancing \u2014 they are \u201chold-and-dilute\u201d names.',
   ],
 
   specialSituations: [
-    '<strong>After SGOV deployment</strong> (you just bought equities on a dip): Do the full equities rebalance 7\u20138 weeks later unless a >5% drift happens sooner.',
-    '<strong>BTC or Real Assets moving hard:</strong> If BTC or (GLD+BCI) cause total equities to drift, rebalance equities first before touching other sleeves.',
-    '<strong>Portfolio < $5,000:</strong> Keep trades to 1\u20132 tickets max per rebalance to avoid tiny fractional clutter.',
+    '<strong>After SGOV deployment:</strong> Wait 7\u20138 weeks before full equities rebalance unless >5% drift occurs sooner.',
+    '<strong>If BTC or real assets move hard:</strong> Rebalance equities first before touching other sleeves.',
+    '<strong>Portfolio < $5,000:</strong> Limit to 1\u20132 trades per rebalance.',
   ],
 
-  example: {
-    setup: 'Portfolio grows to $4,200 and equities hit 63%.',
-    sell:  'Sell $126 total: $60 PLTR + $40 RKLB + $26 NVDA.',
-    buy:   'Buy $126 into VTI.',
-    result:'Equities back to ~57.5%, internal balance restored.',
+  pltrRklb: {
+    intro: 'Almost never during rebalancing. Only with <strong>new contributions</strong> (paycheck money) if:',
+    conditions: [
+      'They drop \u226520% from your average cost basis,',
+      'Your original thesis is still fully intact, AND',
+      'Their combined weight is well below 6.5%.',
+    ],
+    cap: 'Even then, cap any single add at 0.5\u20131% of portfolio. These are high-conviction speculative names \u2014 Dalio would treat them as small, asymmetric bets, not core holdings to add to mechanically.',
   },
 
-  closing: 'This guide ensures you always <strong>sell what has run the most</strong> and <strong>buy what has lagged</strong> \u2014 Dalio\u2019s mechanical \u201cbuy low / sell high\u201d engine \u2014 while keeping your portfolio All Weather and cycle-resilient.',
+  examples: [
+    {
+      title: 'Portfolio-level equities overweight',
+      setup: 'Portfolio = $4,200, equities = 63% ($2,646). Target ~57% ($2,394). Need to sell ~$252 of equities.',
+      sell:  'Sell: $120 PLTR + $80 RKLB + $52 NVDA.',
+      buy:   'Buy: $252 into <strong>SGOV</strong> (or split to GLD/BCI if real assets are more underweight).',
+      result:'Total equities back to ~57%, cash/real assets restored.',
+    },
+    {
+      title: 'Internal rebalance only (total equities OK)',
+      setup: 'Portfolio = $4,000, total equities = 57% (on target), but high-conviction = 8% ($320).',
+      sell:  'Sell: $50 PLTR + $30 RKLB.',
+      buy:   'Buy: $80 into <strong>VTI</strong>.',
+      result:'Total equities unchanged at 57%, internal balance fixed.',
+    },
+    {
+      title: 'Portfolio-level equities underweight (after a big dip deployment)',
+      setup: 'Portfolio = $3,900, equities fell to 52% after you deployed SGOV.',
+      sell:  'Sell nothing from equities.',
+      buy:   'Buy $120 into <strong>VTI</strong> first, then $60 split to VXUS/quality compounders (using remaining SGOV or other overweights).',
+      result:'Equities back inside 55\u201360%.',
+    },
+  ],
+
+  closing: 'This guide forces true <strong>buy-low / sell-high</strong> across the whole portfolio while keeping internal discipline \u2014 exactly the mechanical engine Dalio uses to keep any portfolio All Weather and cycle-resilient.',
 };
 
 const PRIORITY = [
@@ -418,15 +438,13 @@ function syncDynamicValues() {
    CHART
 ═══════════════════════════════════════════════════════════════ */
 
-let chartInstance = null;
-
 function initChart() {
   const labels  = HOLDINGS.map(h => h.ticker);
   const data    = HOLDINGS.map(h => h.pct);
   const dollars = HOLDINGS.map(h => h.dollar);
   const colors  = HOLDINGS.map(h => SLEEVE_COLORS[h.sleeve] ?? '#6b7280');
 
-  chartInstance = new Chart(document.getElementById('currentChart'), {
+  new Chart(document.getElementById('currentChart'), {
     type: 'doughnut',
     data: {
       labels,
@@ -671,91 +689,10 @@ function showPriceStatus(state, detail) {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   RECALCULATE PORTFOLIO FROM LIVE PRICES
-   When live prices arrive, recompute dollar values from share
-   counts, then refresh all UI elements: chart, sleeve bars,
-   table, header stats, callouts, etc.
-═══════════════════════════════════════════════════════════════ */
-
-function recalculatePortfolio(prices) {
-  if (!prices) return;
-
-  let anyUpdated = false;
-
-  // Update dollar values from shares * live price
-  HOLDINGS.forEach(h => {
-    const data = prices[h.ticker];
-    if (data && data.price && h.shares) {
-      h.dollar = h.shares * data.price;
-      anyUpdated = true;
-    }
-  });
-
-  if (!anyUpdated) return;
-
-  // Recompute all percentages and totals
-  recomputePortfolioMath();
-
-  // Update all HTML text (header, footer, stats, callouts, etc.)
-  syncDynamicValues();
-
-  // Update holdings table values and percentages
-  HOLDINGS.forEach(h => {
-    const row = document.querySelector('tr[data-ticker="' + h.ticker + '"]');
-    if (!row) return;
-    const dollarCell = row.querySelector('.dollar-cell');
-    const pctCell = row.querySelector('.pct-cell');
-    if (dollarCell) dollarCell.textContent = '$' + fmt(h.dollar);
-    if (pctCell) pctCell.textContent = h.pct.toFixed(1) + '%';
-  });
-
-  // Update table footer total
-  const tfootTotal = document.getElementById('tableTotalValue');
-  if (tfootTotal) tfootTotal.innerHTML = '<strong>$' + fmtWhole(PORTFOLIO_TOTAL) + '</strong>';
-
-  // Update chart
-  if (chartInstance) {
-    chartInstance.data.datasets[0].data = HOLDINGS.map(h => h.pct);
-    // Update tooltip dollar values
-    const dollars = HOLDINGS.map(h => h.dollar);
-    const data = HOLDINGS.map(h => h.pct);
-    chartInstance.options.plugins.tooltip.callbacks.label = (item) => {
-      const i = item.dataIndex;
-      return ' $' + fmt(dollars[i]) + '  (' + data[i].toFixed(1) + '%)';
-    };
-    chartInstance.update('none'); // no animation for live update
-  }
-
-  // Update chart center label
-  const centerVal = document.querySelector('.chart-center-value');
-  if (centerVal) centerVal.textContent = '$' + fmtWhole(PORTFOLIO_TOTAL);
-
-  // Update legend
-  const legendEl = document.getElementById('currentLegend');
-  if (legendEl) {
-    const legendItems = legendEl.querySelectorAll('.legend-item');
-    legendItems.forEach((item, i) => {
-      const dollarSpan = item.querySelector('.legend-dollar');
-      const pctSpan = item.querySelector('.legend-pct');
-      if (dollarSpan) dollarSpan.textContent = '$' + fmt(HOLDINGS[i].dollar);
-      if (pctSpan) pctSpan.textContent = HOLDINGS[i].pct.toFixed(1) + '%';
-    });
-  }
-
-  // Rebuild sleeve bars
-  const sleeveBarsEl = document.getElementById('sleeveBars');
-  if (sleeveBarsEl) {
-    sleeveBarsEl.innerHTML = '';
-    initSleeveBars();
-  }
-}
-
 async function initLivePrices() {
   // Show cached data immediately if available
   const cached = getCache('prices');
   if (cached && cached.data) {
-    recalculatePortfolio(cached.data);
     updateTableWithPrices(cached.data);
     showPriceStatus('cached', formatCacheAge(cached.age));
   } else {
@@ -767,7 +704,6 @@ async function initLivePrices() {
     const prices = await fetchAllPrices();
     if (prices) {
       setCache('prices', prices);
-      recalculatePortfolio(prices);
       updateTableWithPrices(prices);
       showPriceStatus('live', 'just now');
     } else if (!cached) {
@@ -866,13 +802,17 @@ function initRebalGuide() {
   function makeSection(title, bodyHTML) {
     const div = document.createElement('div');
     div.className = 'rebal-section';
-    div.innerHTML = '<div class="rebal-section-title">' + title + '</div><div class="rebal-section-body">' + bodyHTML + '</div>';
+    div.innerHTML = (title ? '<div class="rebal-section-title">' + title + '</div>' : '') + '<div class="rebal-section-body">' + bodyHTML + '</div>';
     return div;
   }
 
   // Helper: ordered list from array of HTML strings
   function makeOL(items, cls) {
     return '<ol class="rebal-ol ' + (cls || '') + '">' + items.map(t => '<li>' + t + '</li>').join('') + '</ol>';
+  }
+
+  function makeUL(items) {
+    return '<ul class="rebal-ul">' + items.map(t => '<li>' + t + '</li>').join('') + '</ul>';
   }
 
   // 1. Goal
@@ -882,40 +822,58 @@ function initRebalGuide() {
   container.appendChild(goal);
 
   // 2. When to Rebalance
-  container.appendChild(makeSection('When to Rebalance Equities',
-    '<ul class="rebal-ul">' + R.whenToRebalance.map(t => '<li>' + t + '</li>').join('') + '</ul>'
-  ));
+  container.appendChild(makeSection('When to Rebalance Equities', makeUL(R.whenToRebalance)));
 
   // 3. Step-by-Step Process
   const stepsHTML = '<p class="rebal-step-intro">Takes 5\u201310 minutes on Robinhood:</p>';
 
-  // Step 1: Calculate
-  const step1 = '<div class="rebal-step"><div class="rebal-step-num">1</div><div class="rebal-step-body"><strong>Calculate current equities %</strong><p>Add up VTI + VTV + VXUS + NVDA + TSM + MSFT + PLTR + RKLB.<br>Target: <strong>55\u201360%</strong> of total portfolio.</p></div></div>';
+  // Step 1: Calculate current total equities %
+  const step1 = '<div class="rebal-step"><div class="rebal-step-num">1</div><div class="rebal-step-body"><strong>Calculate current total equities %</strong><p>Add up VTI + VTV + VXUS + NVDA + TSM + MSFT + PLTR + RKLB.<br>Target: <strong>55\u201360%</strong> of total portfolio.</p></div></div>';
 
-  // Step 2: Identify Overweights & Underweights (table)
+  // Step 2: Determine type of rebalance
+  const step2 = '<div class="rebal-step"><div class="rebal-step-num">2</div><div class="rebal-step-body"><strong>Determine the type of rebalance</strong>' + makeUL(R.rebalanceTypes) + '</div></div>';
+
+  // Step 3: Sub-Sleeve Targets (table)
   let tableRows = '';
   R.subSleeveTargets.forEach(s => {
     tableRows += '<tr><td>' + s.name + '</td><td>' + s.targetRange + '</td><td>' + s.current + '</td><td>' + s.priority + '</td></tr>';
   });
-  const step2 = '<div class="rebal-step"><div class="rebal-step-num">2</div><div class="rebal-step-body"><strong>Identify Overweights &amp; Underweights</strong> (inside equities)<div class="rebal-table-wrap"><table class="rebal-table"><thead><tr><th>Sub-Sleeve</th><th>Target % of Total</th><th>Current (as of Feb 24)</th><th>Action Priority</th></tr></thead><tbody>' + tableRows + '</tbody></table></div></div></div>';
+  const step3 = '<div class="rebal-step"><div class="rebal-step-num">3</div><div class="rebal-step-body"><strong>Sub-Sleeve Targets</strong> (as % of total portfolio)<div class="rebal-table-wrap"><table class="rebal-table"><thead><tr><th>Sub-Sleeve</th><th>Target % of Total</th><th>Current (' + PORTFOLIO_DATE + ')</th><th>Action Priority</th></tr></thead><tbody>' + tableRows + '</tbody></table></div></div></div>';
 
-  // Step 3: Sell Rules
-  const step3 = '<div class="rebal-step"><div class="rebal-step-num">3</div><div class="rebal-step-body"><strong>Sell Rules</strong> (in this exact order)' + makeOL(R.sellRules, 'rebal-sell-list') + '</div></div>';
+  // Step 4: Sell Rules
+  const step4 = '<div class="rebal-step"><div class="rebal-step-num">4</div><div class="rebal-step-body"><strong>Sell Rules</strong> (exact order)' + makeOL(R.sellRules, 'rebal-sell-list') + '</div></div>';
 
-  // Step 4: Buy Rules
-  const step4 = '<div class="rebal-step"><div class="rebal-step-num">4</div><div class="rebal-step-body"><strong>Buy Rules</strong> (in this exact order)' + makeOL(R.buyRules, 'rebal-buy-list') + '</div></div>';
+  // Step 5: Buy Rules (depends on rebalance type)
+  const buyHTML = '<p class="rebal-buy-type-label"><strong>Portfolio-level</strong> (equities too high):</p>' +
+    makeUL(R.buyRulesPortfolio) +
+    '<p class="rebal-buy-type-label"><strong>Internal only</strong> (total equities OK):</p>' +
+    makeOL(R.buyRulesInternal, 'rebal-buy-list');
+  const step5 = '<div class="rebal-step"><div class="rebal-step-num">5</div><div class="rebal-step-body"><strong>Buy Rules</strong> (depends on rebalance type)' + buyHTML + '</div></div>';
 
-  // Step 5: Special Situations
-  const step5 = '<div class="rebal-step"><div class="rebal-step-num">5</div><div class="rebal-step-body"><strong>Special Situations</strong><ul class="rebal-ul">' + R.specialSituations.map(t => '<li>' + t + '</li>').join('') + '</ul></div></div>';
+  // Step 6: Special Situations
+  const step6 = '<div class="rebal-step"><div class="rebal-step-num">6</div><div class="rebal-step-body"><strong>Special Situations</strong>' + makeUL(R.specialSituations) + '</div></div>';
 
-  container.appendChild(makeSection('Step-by-Step Process', stepsHTML + step1 + step2 + step3 + step4 + step5));
+  container.appendChild(makeSection('Step-by-Step Process', stepsHTML + step1 + step2 + step3 + step4 + step5 + step6));
 
-  // 4. Example
-  const ex = R.example;
-  const exampleHTML = '<div class="rebal-example"><div class="rebal-example-label">Example (hypothetical)</div><p>' + ex.setup + '</p><p class="rebal-example-sell">\u2192 ' + ex.sell + '</p><p class="rebal-example-buy">\u2192 ' + ex.buy + '</p><p class="rebal-example-result">\u2192 ' + ex.result + '</p></div>';
-  container.appendChild(makeSection('', exampleHTML));
+  // 4. When would you ever buy more PLTR or RKLB?
+  const pltr = R.pltrRklb;
+  const pltrHTML = '<p>' + pltr.intro + '</p>' +
+    makeUL(pltr.conditions) +
+    '<p class="rebal-pltr-cap">' + pltr.cap + '</p>';
+  container.appendChild(makeSection('When would you ever buy more PLTR or RKLB?', pltrHTML));
 
-  // 5. Closing
+  // 5. Examples
+  let examplesHTML = '';
+  R.examples.forEach((ex, i) => {
+    examplesHTML += '<div class="rebal-example"><div class="rebal-example-label">Example ' + (i + 1) + ': ' + ex.title + '</div>' +
+      '<p>' + ex.setup + '</p>' +
+      '<p class="rebal-example-sell">\u2192 ' + ex.sell + '</p>' +
+      '<p class="rebal-example-buy">\u2192 ' + ex.buy + '</p>' +
+      '<p class="rebal-example-result">\u2192 ' + ex.result + '</p></div>';
+  });
+  container.appendChild(makeSection('Examples', examplesHTML));
+
+  // 6. Closing
   const closing = document.createElement('div');
   closing.className = 'rebal-closing summary-card';
   closing.innerHTML = '<p>' + R.closing + '</p>';
