@@ -1367,6 +1367,24 @@ main {
   font-weight: 600;
 }
 
+.rebal-example + .rebal-example {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.rebal-buy-type-label {
+  margin-top: 12px !important;
+  margin-bottom: 4px !important;
+  color: var(--text-primary);
+}
+
+.rebal-pltr-cap {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
 @media (max-width: 600px) {
   .rebal-step { flex-direction: column; gap: 8px; }
   .rebal-table { font-size: 0.72rem; }
