@@ -11,7 +11,7 @@
    When live prices are available, values update in real-time.
 ═══════════════════════════════════════════════════════════════ */
 
-const PORTFOLIO_DATE = 'February 24, 2026';
+const PORTFOLIO_DATE = 'February 26, 2026';
 
 const SLEEVE_COLORS = {
   'Dry Powder':         '#22c55e',
@@ -31,18 +31,18 @@ const YAHOO_TICKERS = { 'BTC': 'BTC-USD' };
 // shares = exact share count from Robinhood (update these when you update the portfolio)
 // dollar = position value as of PORTFOLIO_DATE (used as fallback when live prices unavailable)
 const HOLDINGS = [
-  { ticker: 'VTI',  sleeve: 'Broad Market',       shares: 2.788,    dollar: 808.55 },
-  { ticker: 'SGOV', sleeve: 'Dry Powder',          shares: 6.041,    dollar: 607.12 },
-  { ticker: 'BTC',  sleeve: 'Crypto',              shares: 0.005275, dollar: 458.95 },
-  { ticker: 'GLD',  sleeve: 'Gold',                shares: 1.482,    dollar: 392.89 },
-  { ticker: 'VTV',  sleeve: 'Value',               shares: 1.816,    dollar: 308.73 },
-  { ticker: 'VXUS', sleeve: 'International',       shares: 3.799,    dollar: 227.92 },
-  { ticker: 'NVDA', sleeve: 'Quality Compounder',  shares: 1.584,    dollar: 205.97 },
-  { ticker: 'TSM',  sleeve: 'Quality Compounder',  shares: 0.975,    dollar: 190.03 },
-  { ticker: 'MSFT', sleeve: 'Quality Compounder',  shares: 0.4475,   dollar: 181.23 },
-  { ticker: 'BCI',  sleeve: 'Commodity',           shares: 5.621,    dollar: 151.76 },
-  { ticker: 'PLTR', sleeve: 'High Conviction',     shares: 1.252,    dollar: 133.93 },
-  { ticker: 'RKLB', sleeve: 'High Conviction',     shares: 3.963,    dollar: 118.90 },
+  { ticker: 'BTC',  sleeve: 'Crypto',              shares: 0.005275, dollar: 808.37 },
+  { ticker: 'VTI',  sleeve: 'Broad Market',       shares: 2.788,    dollar: 808.37 },
+  { ticker: 'SGOV', sleeve: 'Dry Powder',          shares: 6.041,    dollar: 607.24 },
+  { ticker: 'GLD',  sleeve: 'Gold',                shares: 1.482,    dollar: 396.98 },
+  { ticker: 'VTV',  sleeve: 'Value',               shares: 1.816,    dollar: 310.01 },
+  { ticker: 'VXUS', sleeve: 'International',       shares: 3.799,    dollar: 229.28 },
+  { ticker: 'NVDA', sleeve: 'Quality Compounder',  shares: 1.584,    dollar: 197.93 },
+  { ticker: 'TSM',  sleeve: 'Quality Compounder',  shares: 0.975,    dollar: 185.54 },
+  { ticker: 'MSFT', sleeve: 'Quality Compounder',  shares: 0.4475,   dollar: 185.49 },
+  { ticker: 'BCI',  sleeve: 'Commodity',           shares: 5.621,    dollar: 152.01 },
+  { ticker: 'PLTR', sleeve: 'High Conviction',     shares: 1.252,    dollar: 141.64 },
+  { ticker: 'RKLB', sleeve: 'High Conviction',     shares: 3.963,    dollar: 117.71 },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -584,9 +584,52 @@ async function fetchAllPricesBatch() {
   return Object.keys(results).length > 0 ? results : null;
 }
 
+async function fetchSinglePrice(ticker) {
+  const yahooTicker = YAHOO_TICKERS[ticker] || ticker;
+  const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(yahooTicker) + '?range=1d&interval=1d';
+  const json = await fetchViaProxy(url);
+  const result = json.chart && json.chart.result && json.chart.result[0];
+  if (!result || !result.meta) return null;
+  const meta = result.meta;
+  const price = meta.regularMarketPrice;
+  const prevClose = meta.chartPreviousClose || meta.previousClose || price;
+  return {
+    price,
+    prevClose,
+    change: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
+  };
+}
+
 async function fetchAllPrices() {
-  // Single batch request only — no sequential fallback (avoids 12+ failing CORS requests)
-  return await fetchAllPricesBatch();
+  // Try batch first — if it fails entirely, fall back to individual fetches
+  let results;
+  try {
+    results = await fetchAllPricesBatch() || {};
+  } catch {
+    results = {};
+  }
+
+  // Find tickers missing from the batch response
+  const missing = HOLDINGS.filter(h => !results[h.ticker]).map(h => h.ticker);
+
+  if (missing.length > 0) {
+    // Fetch missing tickers individually (in parallel, max 4 at a time to avoid overload)
+    const chunks = [];
+    for (let i = 0; i < missing.length; i += 4) {
+      chunks.push(missing.slice(i, i + 4));
+    }
+    for (const chunk of chunks) {
+      const fetches = chunk.map(async ticker => {
+        try {
+          const data = await fetchSinglePrice(ticker);
+          if (data) results[ticker] = data;
+        } catch { /* skip — proxy failed for this ticker */ }
+      });
+      await Promise.all(fetches);
+    }
+  }
+
+  return Object.keys(results).length > 0 ? results : null;
 }
 
 function updateTableWithPrices(prices) {
