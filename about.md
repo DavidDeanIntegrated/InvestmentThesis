@@ -8,23 +8,63 @@ permalink: /about/
 
 <h1>About</h1>
 
-<p>I think about markets through the lens of systems, cycles, incentives, and human behavior.</p>
+<p>I am a physician, a systems thinker, and an investor who is obsessed with understanding how complex things actually work.</p>
 
-<p>My approach to investing is shaped by a simple belief: the best decisions come from understanding how the world actually works, not from chasing narratives, headlines, or short-term noise. I am especially drawn to the interaction between economics, policy, power, and markets — and to the idea that investing is not just about picking assets, but about positioning capital intelligently across changing environments.</p>
+<p>By training, I live in high-stakes environments where incomplete information, uncertainty, and time pressure are normal. That has shaped the way I think far beyond medicine. It has made me skeptical of surface-level narratives, more interested in first principles, and deeply drawn to frameworks that help separate signal from noise.</p>
 
-<p>This website is a place to document that process.</p>
+<p>That is the mindset I bring to markets.</p>
+
+<p>I do not see investing as a game of hot takes, constant trading, or pretending to know the future. I see it as a long-term discipline built on pattern recognition, historical awareness, probabilistic thinking, and emotional control. I want to understand the machine underneath the story: what is driving incentives, where liquidity is flowing, how policy is changing behavior, and which assumptions the market may be taking for granted.</p>
+
+<p>This website is where I document that process.</p>
+
+<h2>Why This Framework Resonates With Me</h2>
+
+<p>A major influence on how I think is Ray Dalio's chapter, <a href="https://www.linkedin.com/pulse/investing-light-big-cycle-ray-dalio-lpe8e" target="_blank" rel="noopener"><em>Investing In Light Of The Big Cycle</em></a>.</p>
+
+<p>What I appreciate most about that chapter is that it pushes the reader to zoom out. Most people build their worldview from the short slice of history they personally lived through. That is dangerous in markets. It creates overconfidence, recency bias, and the illusion that the current system is more permanent than it really is.</p>
+
+<p>Dalio's framework resonates with me because it treats markets as part of a broader living system shaped by debt cycles, monetary policy, internal political conflict, external geopolitical competition, and shifts in power. That way of thinking feels much more real to me than simple "stocks go up over time" thinking.</p>
+
+<p>I am interested in the bigger forces underneath price action:</p>
+
+<ul>
+  <li>debt accumulation and debt restructuring</li>
+  <li>fiscal and monetary responses</li>
+  <li>inflation and disinflation</li>
+  <li>productivity and real growth</li>
+  <li>geopolitical competition and strategic resources</li>
+  <li>valuation, liquidity, and crowd psychology</li>
+</ul>
+
+<p>To me, investing gets more interesting when you stop looking only at charts and start asking what kind of world we are actually living in.</p>
+
+<h2>How My Background Shapes The Way I Invest</h2>
+
+<p>Medicine trained me to think in terms of mechanism, triage, and consequences.</p>
+
+<p>In the emergency department, you learn quickly that surface appearances can mislead you. You have to figure out what matters most, what is driving the presentation, what can kill the patient, and what you cannot afford to miss. You also learn that confidence without humility is dangerous.</p>
+
+<p>That carries directly into how I approach investing.</p>
+
+<p>I am naturally drawn to questions like:</p>
+
+<ul>
+  <li>What is the underlying mechanism here?</li>
+  <li>Which variables actually matter most?</li>
+  <li>What is noise and what is signal?</li>
+  <li>What assumptions are embedded in the current price?</li>
+  <li>What happens if the environment changes?</li>
+  <li>Where is the hidden fragility?</li>
+</ul>
+
+<p>I like frameworks that reduce complexity without pretending the world is simple.</p>
 
 <h2>My Investing Philosophy</h2>
 
-<p>I view investing as an exercise in pattern recognition under uncertainty. Markets are never perfectly predictable, but they are not random either. They respond to identifiable pressures, recurring incentives, and policy-driven shifts that tend to repeat in different forms across time.</p>
+<p>At the center of my philosophy is a simple idea: <strong>good investing starts with understanding reality better than average, not reacting faster than average.</strong></p>
 
-<p>One framework that strongly influences my thinking comes from Ray Dalio's <em>Investing in Light of the Big Cycle</em>. The chapter argues that investors should not think narrowly in terms of the last few years or even the last few decades. Instead, they should zoom out and study long historical arcs — especially periods shaped by debt buildups, monetary transitions, internal conflict, external conflict, and changes in geopolitical order. That perspective resonates with me because it replaces complacency with context.</p>
-
-<p>I try to invest with the understanding that prosperity, stability, inflation, deflation, liquidity, taxation, and political order all move in cycles. The market environment that feels normal today may not be normal in a broader historical sense. For that reason, I care less about consensus comfort and more about regime awareness.</p>
-
-<h2>How I Analyze the World</h2>
-
-<p>A core principle behind my work is that markets are largely driven by a handful of major forces rather than by endless disconnected variables. In Dalio's framework, four determinants matter most:</p>
+<p>That means I try to anchor my thinking around a few major drivers rather than an endless stream of disconnected facts. One of the most useful lenses for that comes from Dalio's framing of the four major determinants of asset prices:</p>
 
 <ul>
   <li><strong>Growth</strong></li>
@@ -33,125 +73,123 @@ permalink: /about/
   <li><strong>Discount rates</strong></li>
 </ul>
 
-<p>That lens is useful because it creates a bridge between macro conditions and portfolio construction. Instead of asking only whether an asset "looks good," I try to ask better questions:</p>
+<p>Those four variables do not explain everything, but they explain a lot. They help me connect macro conditions to actual portfolio decisions. They force me to ask better questions:</p>
 
 <ul>
-  <li>What kind of growth environment are we in?</li>
-  <li>Is inflation likely to accelerate, decelerate, or remain sticky?</li>
-  <li>Are investors being adequately compensated for risk?</li>
-  <li>How are policy makers influencing liquidity, credit, and valuation?</li>
+  <li>Are we moving into stronger or weaker real growth?</li>
+  <li>Is inflation cooling, sticky, or reaccelerating?</li>
+  <li>Are investors being paid enough for the risks they are taking?</li>
+  <li>Are central banks and governments tightening, easing, or distorting the normal pricing of assets?</li>
 </ul>
 
-<p>These questions help reduce noise and force clarity. They also help me think across asset classes, not just within them.</p>
+<p>I do not want to invest based only on vibes. I want to invest with a framework.</p>
 
-<h2>Investment Framework &amp; Methodology</h2>
+<h2>Why History Matters To Me</h2>
 
-<p>This portfolio is structured around Ray Dalio's principles from <em>"Investing in Light of the Big Cycle."</em> It emphasizes <strong>balanced diversification</strong> across the four key drivers — growth, inflation, risk premiums, and discount rates — to survive late-cycle environments of currency devaluation and financial-asset destruction.</p>
+<p>I care a lot about history because history protects you from naivete.</p>
+
+<p>One of the biggest lessons I take from the "Big Cycle" perspective is that many investors are unconsciously trained by a very favorable period of American market history. If that is your only frame of reference, it is easy to assume that wealth compounds in a relatively orderly way, that political systems remain stable, that currencies remain credible, and that diversification is mostly about owning different tickers.</p>
+
+<p>But broader history tells a harsher story.</p>
+
+<p>Across countries and across time, wealth has been diluted, inflated away, confiscated, heavily taxed, frozen by capital controls, and destroyed by war, disorder, or policy error. That does not mean catastrophe is always around the corner. It means serious investors should be humble enough to admit that the future can look very different from the recent past.</p>
+
+<p>That matters to me because I do not want my convictions to rest on survivorship bias.</p>
+
+<h2>My View Of Risk</h2>
+
+<p>I do not think true risk is just volatility.</p>
+
+<p>A stock going down is uncomfortable, but discomfort is not the same as danger. Real danger is being concentrated in the wrong assumptions. Real danger is permanent impairment. Real danger is constructing a portfolio that only works if one narrow version of the future shows up.</p>
+
+<p>So when I think about risk, I think about questions like:</p>
 
 <ul>
-  <li><strong>Growth</strong> — captured through a 55–60% equity allocation spanning broad market, value, quality compounders, and high-conviction names</li>
-  <li><strong>Inflation</strong> — hedged through real assets (gold + broad commodities) at 14–16%</li>
-  <li><strong>Risk premiums</strong> — managed through tactical dry powder (SGOV T-bills) at 14–17%</li>
-  <li><strong>Discount rates</strong> — addressed through geographic and asset-class diversification</li>
+  <li>What could structurally break this thesis?</li>
+  <li>What am I assuming about policy, growth, liquidity, and behavior?</li>
+  <li>How wrong could I be if the macro regime changes?</li>
+  <li>What kind of drawdown would actually alter my life or force bad decisions?</li>
 </ul>
 
-<p>The design deliberately avoids U.S.-only survivorship bias and protects purchasing power when financial wealth is devalued relative to tangible assets. Every position serves a specific purpose within the All Weather framework.</p>
-
-<h2>Why History Matters</h2>
-
-<p>Most investors are heavily influenced by the era they personally lived through. That creates blind spots.</p>
-
-<p>One of the most important lessons from <em>Investing in Light of the Big Cycle</em> is that looking only at recent U.S. market history can create a dangerously incomplete mental model. Strong returns in a relatively stable post-1945 order can make investors underestimate how often wealth has been impaired, confiscated, diluted, or destroyed across countries and across centuries.</p>
-
-<p>That idea deeply shapes how I think. I do not want to build convictions on survivorship bias. I want to understand what happens not only during prosperous expansions, but also during debt restructurings, monetary debasement, geopolitical stress, and periods when the existing order starts to fracture.</p>
-
-<p>History does not repeat mechanically, but it does rhyme through incentives, constraints, and human behavior. Studying those patterns helps me stay intellectually flexible and less emotionally reactive.</p>
-
-<h2>My View of Risk</h2>
-
-<p>I do not think of risk as price volatility alone.</p>
-
-<p>True risk is the possibility of being wrong in a way that permanently damages long-term outcomes. It is the possibility that a portfolio fails to meet real-world goals, suffers ruin during a major regime shift, or becomes too concentrated in assumptions that only work in one kind of environment.</p>
-
-<p>That means risk management is not just about reducing drawdowns. It is about building resilience.</p>
-
-<p>To me, resilience comes from:</p>
-
-<ul>
-  <li>respecting uncertainty</li>
-  <li>avoiding one-variable thinking</li>
-  <li>diversifying across environments</li>
-  <li>recognizing when policy and liquidity matter more than narratives</li>
-  <li>remaining humble about what cannot be known in advance</li>
-</ul>
-
-<p>I am less interested in sounding certain than in being structurally prepared.</p>
+<p>To me, good risk management is not cowardice. It is durability.</p>
 
 <h2>How I Build Conviction</h2>
 
-<p>My convictions are built at the intersection of first principles and historical comparison.</p>
+<p>I build conviction by combining first principles with historical comparison.</p>
 
-<p>I like to begin with the mechanics:</p>
+<p>I usually start with the mechanics:</p>
 
 <ul>
-  <li>How is money being created or restricted?</li>
-  <li>Where is credit expanding?</li>
-  <li>What incentives are policy makers responding to?</li>
-  <li>What asset classes benefit or suffer under those conditions?</li>
-  <li>What is already priced in?</li>
+  <li>how money is being created or constrained</li>
+  <li>how credit is expanding or contracting</li>
+  <li>what governments and central banks are incentivized to do</li>
+  <li>what sectors or asset classes benefit from those conditions</li>
+  <li>what the market has already priced in</li>
 </ul>
 
-<p>From there, I compare the present to past environments — not to force an exact analogy, but to widen the field of view. Sometimes the most valuable insight comes not from predicting the future precisely, but from seeing which assumptions the market is taking for granted.</p>
+<p>Then I zoom out.</p>
 
-<p>I am especially interested in environments where consensus is anchored to a narrow recent history while the underlying structure is changing. Those are often the periods when diversification, humility, and regime awareness matter most.</p>
+<p>I ask where we might be in a larger cycle, what historical environments rhyme with the current setup, and whether the dominant market narrative is too confident, too narrow, or too anchored to recent experience.</p>
+
+<p>I am especially interested in moments when the world may be changing faster than consensus recognizes.</p>
+
+<h2>What I Am Drawn To As An Investor</h2>
+
+<p>I am most interested in areas where macro forces, technology, scarcity, and strategic competition overlap.</p>
+
+<p>That includes things like:</p>
+
+<ul>
+  <li>AI and the infrastructure needed to power it</li>
+  <li>energy and electricity as civilizational bottlenecks</li>
+  <li>defense, aerospace, and national security-linked technologies</li>
+  <li>resource constraints that matter in a more fractured world</li>
+  <li>businesses with strong positioning inside long-duration structural shifts</li>
+  <li>portfolios designed to survive multiple macro regimes, not just one</li>
+</ul>
+
+<p>I like situations where a thesis can be grounded in real-world incentives, not just hype.</p>
 
 <h2>What This Site Is For</h2>
 
-<p>This website serves as a living record of how I think.</p>
+<p>This site is a public record of how I think, what I am learning, and how I am refining my decision-making over time.</p>
 
-<p>Here I share:</p>
-
-<ul>
-  <li>portfolio ideas and allocation logic</li>
-  <li>macro observations and regime-based thinking</li>
-  <li>notes on markets, incentives, and monetary conditions</li>
-  <li>long-form reflections on risk, valuation, and positioning</li>
-  <li>frameworks that help translate world events into investable decisions</li>
-</ul>
-
-<p>My goal is not to present myself as someone who can predict every twist in the market. My goal is to think clearly, update honestly, and build a decision-making process that can survive contact with reality.</p>
-
-<h2>Core Principles Behind My Work</h2>
-
-<h3>1. Understand the machine before placing the bet</h3>
-<p>I want to understand the structure beneath the story: the credit conditions, policy incentives, macro pressures, and behavioral dynamics driving outcomes.</p>
-
-<h3>2. Study long cycles, not just recent trends</h3>
-<p>Recent performance can distort judgment. I believe broader historical context improves both risk awareness and strategic patience.</p>
-
-<h3>3. Diversify across regimes</h3>
-<p>A strong portfolio should not depend on a single macro outcome. It should be able to withstand multiple paths for growth, inflation, liquidity, and policy.</p>
-
-<h3>4. Respect asymmetry</h3>
-<p>Some mistakes are recoverable. Others are permanently destructive. I try to avoid the latter.</p>
-
-<h3>5. Stay adaptable</h3>
-<p>Good investing requires conviction, but durable conviction must remain updateable. New evidence matters.</p>
-
-<h2>Current Focus</h2>
-
-<p>Right now, I am most interested in the overlap between:</p>
+<p>Here you will find:</p>
 
 <ul>
-  <li>long-cycle debt dynamics</li>
-  <li>fiscal and monetary policy</li>
-  <li>geopolitical competition</li>
-  <li>structural inflation and disinflation forces</li>
-  <li>asset allocation under regime uncertainty</li>
-  <li>concentration risk in crowded narratives</li>
+  <li>investing frameworks</li>
+  <li>market and macro reflections</li>
+  <li>portfolio logic and allocation ideas</li>
+  <li>long-form writing on risk, cycles, and incentives</li>
+  <li>notes on themes I believe will matter over the next decade</li>
 </ul>
 
-<p>These are not just academic interests. They shape how capital gets priced, where opportunity emerges, and where hidden fragility accumulates.</p>
+<p>I am not trying to present myself as someone who has every answer. I am trying to become someone with a sharper process, better judgment, and the discipline to keep learning in public.</p>
+
+<h2>Core Beliefs Behind My Work</h2>
+
+<h3>1. First principles matter</h3>
+<p>I want to understand the mechanism, not just memorize the narrative.</p>
+
+<h3>2. History expands judgment</h3>
+<p>The wider your historical lens, the less likely you are to confuse a favorable era with a permanent truth.</p>
+
+<h3>3. Incentives drive behavior</h3>
+<p>Governments, central banks, institutions, and individuals all respond to incentives. Markets often make more sense when viewed through that lens.</p>
+
+<h3>4. Resilience beats false precision</h3>
+<p>I would rather be robust across multiple futures than perfectly optimized for one forecast that may be wrong.</p>
+
+<h3>5. Humility is a competitive advantage</h3>
+<p>Arrogance gets punished. Adaptability compounds.</p>
+
+<h2>A More Personal Note</h2>
+
+<p>Part of why I care about investing is that I care about building a life with range, freedom, and long-term leverage.</p>
+
+<p>I want to become the kind of person who can think clearly under pressure, allocate capital intelligently, recognize major shifts early, and create optionality over decades, not just months. I am drawn to hard fields because they reveal character. Medicine has done that for me. Markets do that too.</p>
+
+<p>This website sits at the intersection of those interests: discipline, systems, risk, ambition, uncertainty, and the search for truth in complex environments.</p>
 
   </div>
 
@@ -172,12 +210,6 @@ permalink: /about/
 
   <div class="page-content about-content">
 
-<h2>Closing</h2>
-
-<p>At its best, investing is not about certainty. It is about disciplined thinking in a world that is always changing.</p>
-
-<p>I built this site to sharpen that discipline — to study the big picture, document my process, and make better decisions over time. If that way of thinking resonates with you, you will probably find something useful here.</p>
-
 <h2>Further Reading</h2>
 
 <p>This page was inspired by Ray Dalio's chapter <strong>"Investing In Light Of The Big Cycle"</strong> and the broader <strong>Principles for Dealing with the Changing World Order</strong> resources.</p>
@@ -189,7 +221,7 @@ permalink: /about/
 
 <hr>
 
-<p class="about-disclaimer"><em>This content reflects my personal framework for thinking about markets and risk. It is for educational and informational purposes only and should not be construed as personalized investment advice.</em></p>
+<p class="about-disclaimer"><em>This page reflects my personal framework for thinking about markets, risk, and long-term capital allocation. It is for educational and informational purposes only and should not be construed as personalized investment advice.</em></p>
 
   </div>
 </main>
