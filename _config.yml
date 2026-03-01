@@ -1,0 +1,21 @@
+title: "Investment Thesis Library"
+description: "Research-driven investment theses grounded in Ray Dalio's All Weather principles."
+baseurl: "/InvestmentThesis"
+url: ""
+
+collections:
+  theses:
+    output: true
+    permalink: /theses/:slug/
+    sort_by: date
+
+defaults:
+  - scope:
+      path: ""
+      type: "theses"
+    values:
+      layout: "thesis"
+  - scope:
+      path: ""
+    values:
+      layout: "default"
