@@ -776,6 +776,31 @@ img { max-width: 100%; height: auto; }
   text-underline-offset: 2px;
 }
 
+.page-content h3 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.page-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+
+.about-disclaimer {
+  font-size: 0.85rem !important;
+  color: var(--text-muted) !important;
+}
+
+.about-theses-section {
+  max-width: 1200px;
+  margin: 2em auto;
+  padding: 0 24px;
+}
+
 /* ================================================================
    FOOTER
 ================================================================ */
