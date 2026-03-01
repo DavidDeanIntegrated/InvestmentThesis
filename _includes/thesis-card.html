@@ -1,0 +1,23 @@
+<a href="{{ thesis.url | relative_url }}" class="thesis-card"
+   data-ticker="{{ thesis.ticker }}"
+   data-sector="{{ thesis.sector }}"
+   data-tags="{{ thesis.tags | join: ',' }}"
+   data-title="{{ thesis.title }}"
+   data-date="{{ thesis.date | date: '%Y-%m-%d' }}">
+  <div class="thesis-card-header">
+    <span class="thesis-card-ticker">{{ thesis.ticker }}</span>
+    <span class="thesis-card-sector">{{ thesis.sector }}</span>
+  </div>
+  <h3 class="thesis-card-title">{{ thesis.title }}</h3>
+  <p class="thesis-card-summary">{{ thesis.summary }}</p>
+  <div class="thesis-card-footer">
+    <time class="thesis-card-date" datetime="{{ thesis.date | date: '%Y-%m-%d' }}">{{ thesis.date | date: "%b %d, %Y" }}</time>
+    {% if thesis.tags %}
+    <div class="thesis-card-tags">
+      {% for tag in thesis.tags limit:3 %}
+      <span class="tag-chip tag-chip-sm">{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</a>

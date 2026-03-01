@@ -1,0 +1,9 @@
+main:
+  - title: Home
+    url: /
+  - title: Theses
+    url: /theses/
+  - title: Dashboard
+    url: /dashboard/
+  - title: About
+    url: /about/

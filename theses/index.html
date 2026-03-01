@@ -1,0 +1,54 @@
+---
+layout: default
+title: All Theses
+extra_js:
+  - /assets/js/thesis-search.js
+---
+<main class="theses-main">
+  <h1>All Theses</h1>
+
+  <div class="filter-bar">
+    <div class="search-input-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="thesisSearch" placeholder="Search by ticker, sector, keyword..." autocomplete="off">
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Sector:</span>
+      <button class="sector-filter active" data-sector="all">All</button>
+      {% assign all_sectors = site.theses | map: "sector" | uniq | sort %}
+      {% for sector in all_sectors %}
+      <button class="sector-filter" data-sector="{{ sector }}">{{ sector }}</button>
+      {% endfor %}
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Tags:</span>
+      {% assign all_tags = "" | split: "" %}
+      {% for thesis in site.theses %}
+        {% for tag in thesis.tags %}
+          {% assign all_tags = all_tags | push: tag %}
+        {% endfor %}
+      {% endfor %}
+      {% assign unique_tags = all_tags | uniq | sort %}
+      {% for tag in unique_tags %}
+      <span class="tag-chip tag-chip-clickable" data-tag="{{ tag }}">{{ tag }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="thesis-cards" id="thesisCards">
+    {% assign sorted_theses = site.theses | sort: 'date' | reverse %}
+    {% for thesis in sorted_theses %}
+      {% include thesis-card.html thesis=thesis %}
+    {% endfor %}
+  </div>
+
+  <div class="no-results" id="noResults">
+    <p>No theses match your search. Try adjusting your filters.</p>
+  </div>
+
+  <noscript>
+    <p style="text-align: center; padding: 16px; color: var(--text-muted); font-size: 0.85rem;">
+      Search and filtering require JavaScript. All theses are displayed below.
+    </p>
+  </noscript>
+</main>

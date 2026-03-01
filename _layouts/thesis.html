@@ -1,0 +1,74 @@
+---
+layout: default
+extra_css:
+  - /assets/css/thesis.css
+extra_js:
+  - /assets/js/toc.js
+---
+<main class="thesis-main">
+  <div class="thesis-layout">
+    <aside class="thesis-sidebar" id="thesisSidebar">
+      <div class="toc-container" id="tocContainer">
+        <div class="toc-header">On This Page</div>
+        <nav class="toc-nav" id="tocNav" aria-label="Table of contents"></nav>
+      </div>
+    </aside>
+    <article class="thesis-article">
+      <header class="thesis-header">
+        <div class="thesis-meta-row">
+          {% if page.sector %}<span class="thesis-sector">{{ page.sector }}</span>{% endif %}
+          {% if page.date %}<time class="thesis-date" datetime="{{ page.date | date: '%Y-%m-%d' }}">{{ page.date | date: "%B %d, %Y" }}</time>{% endif %}
+          {% if page.allocation_pct %}<span class="thesis-weight">{{ page.allocation_pct }}% allocation</span>{% endif %}
+        </div>
+        <h1 class="thesis-title">{{ page.title }}</h1>
+        {% if page.summary %}<p class="thesis-summary">{{ page.summary }}</p>{% endif %}
+        {% if page.tags %}
+        <div class="thesis-tags">
+          {% for tag in page.tags %}
+          <span class="tag-chip">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </header>
+      <div class="thesis-content" id="thesisContent">
+        {{ content }}
+      </div>
+      <nav class="thesis-nav-links">
+        {% assign sorted_theses = site.theses | sort: 'date' | reverse %}
+        {% assign prev_thesis = nil %}
+        {% assign next_thesis = nil %}
+        {% assign found = false %}
+        {% for t in sorted_theses %}
+          {% if found and next_thesis == nil %}
+            {% assign next_thesis = t %}
+          {% endif %}
+          {% if t.url == page.url %}
+            {% assign found = true %}
+          {% endif %}
+          {% if found == false %}
+            {% assign prev_thesis = t %}
+          {% endif %}
+        {% endfor %}
+        <div class="thesis-nav-prev">
+          {% if prev_thesis %}
+          <a href="{{ prev_thesis.url | relative_url }}">
+            <span class="thesis-nav-label">&larr; Previous</span>
+            <span class="thesis-nav-title">{{ prev_thesis.title }}</span>
+          </a>
+          {% endif %}
+        </div>
+        <div class="thesis-nav-next">
+          {% if next_thesis %}
+          <a href="{{ next_thesis.url | relative_url }}">
+            <span class="thesis-nav-label">Next &rarr;</span>
+            <span class="thesis-nav-title">{{ next_thesis.title }}</span>
+          </a>
+          {% endif %}
+        </div>
+      </nav>
+      <div class="thesis-back">
+        <a href="{{ '/theses/' | relative_url }}">&larr; Back to All Theses</a>
+      </div>
+    </article>
+  </div>
+</main>

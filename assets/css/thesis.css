@@ -1,0 +1,429 @@
+/* ================================================================
+   THESIS PAGE — Long-form reading layout with sidebar TOC
+================================================================ */
+
+.thesis-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+.thesis-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+/* ================================================================
+   SIDEBAR TOC
+================================================================ */
+.thesis-sidebar {
+  position: sticky;
+  top: 72px;
+}
+
+.toc-container {
+  padding: 16px 0;
+}
+
+.toc-header {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  padding-left: 12px;
+}
+
+.toc-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toc-link {
+  display: block;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  line-height: 1.4;
+}
+
+.toc-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  text-decoration: none;
+}
+
+.toc-link.active {
+  color: var(--gold);
+  border-left-color: var(--gold);
+  font-weight: 600;
+}
+
+.toc-link.toc-h3 {
+  padding-left: 24px;
+  font-size: 0.78rem;
+}
+
+/* Mobile TOC dropdown */
+.toc-mobile-toggle {
+  display: none;
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 16px;
+}
+
+.toc-mobile-toggle::after {
+  content: ' ▾';
+  color: var(--text-muted);
+}
+
+/* ================================================================
+   THESIS ARTICLE
+================================================================ */
+.thesis-article {
+  min-width: 0;
+}
+
+.thesis-header {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.thesis-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.thesis-sector {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 20px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.thesis-date {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.thesis-weight {
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.thesis-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.thesis-summary {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.thesis-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ================================================================
+   THESIS CONTENT — Long-form reading typography
+================================================================ */
+.thesis-content {
+  max-width: 680px;
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  color: var(--text-primary);
+}
+
+.thesis-content h2 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2.5em;
+  margin-bottom: 0.75em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.thesis-content h2:first-child {
+  margin-top: 0;
+}
+
+.thesis-content h3 {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  color: var(--text-primary);
+}
+
+.thesis-content p {
+  margin-bottom: 1.25em;
+  color: var(--text-secondary);
+}
+
+.thesis-content strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.thesis-content em {
+  font-style: italic;
+}
+
+.thesis-content a {
+  color: var(--blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.thesis-content a:hover {
+  color: var(--gold);
+}
+
+.thesis-content blockquote {
+  border-left: 3px solid var(--gold);
+  padding-left: 1.25em;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 1.5em 0;
+}
+
+.thesis-content ul, .thesis-content ol {
+  padding-left: 1.5em;
+  margin-bottom: 1.25em;
+}
+
+.thesis-content li {
+  margin-bottom: 0.5em;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.thesis-content li strong {
+  color: var(--text-primary);
+}
+
+.thesis-content table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.5em 0;
+  font-size: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.thesis-content th {
+  background: var(--bg-elevated);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.thesis-content td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.thesis-content tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.thesis-content code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--gold);
+}
+
+.thesis-content pre {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  overflow-x: auto;
+  margin: 1.5em 0;
+}
+
+.thesis-content pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+/* ================================================================
+   THESIS NAVIGATION (Prev / Next)
+================================================================ */
+.thesis-nav-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.thesis-nav-prev,
+.thesis-nav-next {
+  min-width: 0;
+}
+
+.thesis-nav-next {
+  text-align: right;
+}
+
+.thesis-nav-links a {
+  display: block;
+  padding: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.thesis-nav-links a:hover {
+  border-color: var(--gold);
+  box-shadow: var(--shadow-card);
+  text-decoration: none;
+}
+
+.thesis-nav-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.thesis-nav-title {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thesis-back {
+  margin-top: 24px;
+}
+
+.thesis-back a {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.thesis-back a:hover {
+  color: var(--gold);
+}
+
+/* ================================================================
+   RESPONSIVE
+================================================================ */
+@media (max-width: 900px) {
+  .thesis-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .thesis-sidebar {
+    position: static;
+    margin-bottom: 24px;
+  }
+
+  .toc-container {
+    padding: 0;
+  }
+
+  .toc-header {
+    display: none;
+  }
+
+  .toc-nav {
+    display: none;
+  }
+
+  .toc-nav.open {
+    display: flex;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 8px;
+    margin-bottom: 16px;
+  }
+
+  .toc-mobile-toggle {
+    display: block;
+  }
+
+  .thesis-title {
+    font-size: 1.5rem;
+  }
+
+  .thesis-nav-links {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .thesis-main {
+    padding: 24px 16px 60px;
+  }
+
+  .thesis-content {
+    font-size: 1rem;
+  }
+
+  .thesis-content h2 {
+    font-size: 1.25rem;
+  }
+}
