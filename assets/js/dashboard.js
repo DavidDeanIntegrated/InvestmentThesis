@@ -564,28 +564,43 @@ function initHoldingsTable() {
    LIVE MARKET PRICES
 ═══════════════════════════════════════════════════════════════ */
 
-async function fetchViaProxy(url) {
-  // Strategy 1: allorigins.win /get endpoint (wraps response in JSON, adds CORS headers)
-  try {
-    const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
-    if (res.ok) {
-      const wrapper = await res.json();
-      return JSON.parse(wrapper.contents);
-    }
-  } catch { /* next */ }
+// Fetch with a timeout (default 8s) — prevents hanging proxies from blocking everything
+function fetchWithTimeout(url, timeoutMs) {
+  timeoutMs = timeoutMs || 8000;
+  const controller = new AbortController();
+  const timer = setTimeout(function() { controller.abort(); }, timeoutMs);
+  return fetch(url, { signal: controller.signal }).finally(function() { clearTimeout(timer); });
+}
 
-  // Strategy 2: corsproxy.org
-  try {
-    const res = await fetch('https://corsproxy.org/?' + encodeURIComponent(url));
-    if (res.ok) return await res.json();
-  } catch { /* next */ }
+// CORS proxy strategies — each returns a { url, parse } pair
+const PROXY_STRATEGIES = [
+  {
+    name: 'allorigins',
+    buildUrl: function(url) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(url); },
+    parse: async function(res) { var w = await res.json(); return JSON.parse(w.contents); },
+  },
+  {
+    name: 'corsproxy',
+    buildUrl: function(url) { return 'https://corsproxy.org/?' + encodeURIComponent(url); },
+    parse: async function(res) { return res.json(); },
+  },
+  {
+    name: 'codetabs',
+    buildUrl: function(url) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url); },
+    parse: async function(res) { return res.json(); },
+  },
+];
 
-  // Strategy 3: api.codetabs.com proxy
-  try {
-    const res = await fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url));
-    if (res.ok) return await res.json();
-  } catch { /* next */ }
-
+async function fetchViaProxy(url, startIdx) {
+  startIdx = startIdx || 0;
+  var strategies = PROXY_STRATEGIES.slice(startIdx).concat(PROXY_STRATEGIES.slice(0, startIdx));
+  for (var i = 0; i < strategies.length; i++) {
+    var s = strategies[i];
+    try {
+      var res = await fetchWithTimeout(s.buildUrl(url));
+      if (res.ok) return await s.parse(res);
+    } catch { /* next strategy */ }
+  }
   throw new Error('All proxy strategies failed for: ' + url);
 }
 
@@ -593,79 +608,107 @@ async function fetchViaProxy(url) {
 const YAHOO_REVERSE = {};
 Object.entries(YAHOO_TICKERS).forEach(([k, v]) => { YAHOO_REVERSE[v] = k; });
 
-async function fetchAllPricesBatch() {
-  // Build a single comma-separated symbol list for Yahoo's spark endpoint
-  const symbols = HOLDINGS.map(h => YAHOO_TICKERS[h.ticker] || h.ticker).join(',');
-  const url = 'https://query2.finance.yahoo.com/v8/finance/spark?symbols=' + encodeURIComponent(symbols) + '&range=1d&interval=1d';
+function parseYahooPrice(meta) {
+  if (!meta || !meta.regularMarketPrice) return null;
+  var price = meta.regularMarketPrice;
+  var prevClose = meta.chartPreviousClose || meta.previousClose || price;
+  return {
+    price: price,
+    prevClose: prevClose,
+    change: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
+  };
+}
 
-  const json = await fetchViaProxy(url);
-  const results = {};
+async function fetchAllPricesBatch(proxyIdx) {
+  var symbols = HOLDINGS.map(function(h) { return YAHOO_TICKERS[h.ticker] || h.ticker; }).join(',');
+  var url = 'https://query2.finance.yahoo.com/v8/finance/spark?symbols=' + encodeURIComponent(symbols) + '&range=1d&interval=1d';
 
-  // Spark returns { spark: { result: [ { symbol, response: [{ meta, ... }] } ] } }
-  const items = (json.spark && json.spark.result) || [];
-  for (const item of items) {
-    const yahooSym = item.symbol;
-    const resp = item.response && item.response[0];
+  var json = await fetchViaProxy(url, proxyIdx);
+  var results = {};
+  var items = (json.spark && json.spark.result) || [];
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var resp = item.response && item.response[0];
     if (!resp || !resp.meta) continue;
+    var data = parseYahooPrice(resp.meta);
+    if (!data) continue;
+    var ticker = YAHOO_REVERSE[item.symbol] || item.symbol;
+    results[ticker] = data;
+  }
+  return Object.keys(results).length > 0 ? results : null;
+}
 
-    const meta = resp.meta;
-    const price = meta.regularMarketPrice;
-    const prevClose = meta.chartPreviousClose || meta.previousClose || price;
-    const ticker = YAHOO_REVERSE[yahooSym] || yahooSym;
+async function fetchSinglePrice(ticker, proxyIdx) {
+  var yahooTicker = YAHOO_TICKERS[ticker] || ticker;
+  var url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(yahooTicker) + '?range=1d&interval=1d';
+  var json = await fetchViaProxy(url, proxyIdx);
+  var result = json.chart && json.chart.result && json.chart.result[0];
+  return result ? parseYahooPrice(result.meta) : null;
+}
 
-    results[ticker] = {
-      price,
-      prevClose,
-      change: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
-    };
+// Merge new prices into cached prices and save
+function mergePricesIntoCache(newPrices) {
+  if (!newPrices) return;
+  var cached = getCache('prices');
+  var merged = (cached && cached.data) ? Object.assign({}, cached.data, newPrices) : Object.assign({}, newPrices);
+  setCache('prices', merged);
+  return merged;
+}
+
+// Fetch individual tickers in parallel with all fetches racing independently
+async function fetchMissingPrices(tickers, proxyIdx) {
+  var results = {};
+  var fetches = tickers.map(function(ticker) {
+    return fetchSinglePrice(ticker, proxyIdx).then(function(data) {
+      if (data) results[ticker] = data;
+    }).catch(function() { /* skip */ });
+  });
+  await Promise.all(fetches);
+  return results;
+}
+
+async function fetchAllPrices() {
+  var results = {};
+
+  // Round 1: Try batch endpoint
+  try {
+    var batch = await fetchAllPricesBatch(0);
+    if (batch) Object.assign(results, batch);
+  } catch { /* batch failed */ }
+
+  // Find missing tickers and fetch them individually (all in parallel)
+  var missing = HOLDINGS.filter(function(h) { return !results[h.ticker]; }).map(function(h) { return h.ticker; });
+  if (missing.length > 0) {
+    var individual = await fetchMissingPrices(missing, 0);
+    Object.assign(results, individual);
   }
 
   return Object.keys(results).length > 0 ? results : null;
 }
 
-async function fetchSinglePrice(ticker) {
-  const yahooTicker = YAHOO_TICKERS[ticker] || ticker;
-  const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(yahooTicker) + '?range=1d&interval=1d';
-  const json = await fetchViaProxy(url);
-  const result = json.chart && json.chart.result && json.chart.result[0];
-  if (!result || !result.meta) return null;
-  const meta = result.meta;
-  const price = meta.regularMarketPrice;
-  const prevClose = meta.chartPreviousClose || meta.previousClose || price;
-  return {
-    price,
-    prevClose,
-    change: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
-  };
-}
+// Retry still-missing tickers using a different proxy start index
+async function retryMissingPrices(existingPrices) {
+  var have = existingPrices || {};
+  var missing = HOLDINGS.filter(function(h) { return !have[h.ticker]; }).map(function(h) { return h.ticker; });
+  if (missing.length === 0) return null;
 
-async function fetchAllPrices() {
-  // Try batch first — if it fails entirely, fall back to individual fetches
-  let results;
+  var results = {};
+
+  // Try batch with a different proxy first
   try {
-    results = await fetchAllPricesBatch() || {};
-  } catch {
-    results = {};
-  }
-
-  // Find tickers missing from the batch response
-  const missing = HOLDINGS.filter(h => !results[h.ticker]).map(h => h.ticker);
-
-  if (missing.length > 0) {
-    // Fetch missing tickers individually (in parallel, max 4 at a time to avoid overload)
-    const chunks = [];
-    for (let i = 0; i < missing.length; i += 4) {
-      chunks.push(missing.slice(i, i + 4));
+    var batch = await fetchAllPricesBatch(1);
+    if (batch) {
+      for (var i = 0; i < missing.length; i++) {
+        if (batch[missing[i]]) results[missing[i]] = batch[missing[i]];
+      }
     }
-    for (const chunk of chunks) {
-      const fetches = chunk.map(async ticker => {
-        try {
-          const data = await fetchSinglePrice(ticker);
-          if (data) results[ticker] = data;
-        } catch { /* skip — proxy failed for this ticker */ }
-      });
-      await Promise.all(fetches);
-    }
+  } catch { /* batch retry failed */ }
+
+  // Individual fetch for anything still missing, using yet another proxy
+  var stillMissing = missing.filter(function(t) { return !results[t]; });
+  if (stillMissing.length > 0) {
+    var individual = await fetchMissingPrices(stillMissing, 2);
+    Object.assign(results, individual);
   }
 
   return Object.keys(results).length > 0 ? results : null;
@@ -795,30 +838,77 @@ function recalculatePortfolio(prices) {
   }
 }
 
+function countPricedHoldings(prices) {
+  if (!prices) return 0;
+  return HOLDINGS.filter(function(h) { return !!prices[h.ticker]; }).length;
+}
+
+function priceStatusText(prices) {
+  var n = countPricedHoldings(prices);
+  return n + '/' + HOLDINGS.length + ' tickers';
+}
+
 async function initLivePrices() {
-  // Show cached data immediately if available
-  const cached = getCache('prices');
+  // Step 1: Show cached data immediately if available
+  var cached = getCache('prices');
+  var allPrices = (cached && cached.data) ? Object.assign({}, cached.data) : {};
+
   if (cached && cached.data) {
     recalculatePortfolio(cached.data);
     updateTableWithPrices(cached.data);
-    showPriceStatus('cached', formatCacheAge(cached.age));
+    showPriceStatus('cached', formatCacheAge(cached.age) + ' \u00b7 ' + priceStatusText(cached.data));
   } else {
     showPriceStatus('loading');
   }
 
-  // Fetch fresh data
+  // Step 2: Fetch fresh prices (batch + individual fallback)
   try {
-    const prices = await fetchAllPrices();
+    var prices = await fetchAllPrices();
     if (prices) {
-      setCache('prices', prices);
-      recalculatePortfolio(prices);
-      updateTableWithPrices(prices);
-      showPriceStatus('live', 'just now');
+      Object.assign(allPrices, prices);
+      var merged = mergePricesIntoCache(allPrices);
+      recalculatePortfolio(merged);
+      updateTableWithPrices(merged);
+      showPriceStatus('live', 'just now \u00b7 ' + priceStatusText(merged));
     } else if (!cached) {
       showPriceStatus('error');
     }
   } catch {
     if (!cached) showPriceStatus('error');
+  }
+
+  // Step 3: If any tickers are still missing, retry after a short delay
+  var missingCount = HOLDINGS.length - countPricedHoldings(allPrices);
+  if (missingCount > 0) {
+    setTimeout(async function() {
+      try {
+        var retryPrices = await retryMissingPrices(allPrices);
+        if (retryPrices) {
+          Object.assign(allPrices, retryPrices);
+          var merged = mergePricesIntoCache(allPrices);
+          recalculatePortfolio(merged);
+          updateTableWithPrices(merged);
+          showPriceStatus('live', 'just now \u00b7 ' + priceStatusText(merged));
+        }
+      } catch { /* retry failed silently */ }
+
+      // Step 4: If still missing after retry, schedule one more attempt
+      var stillMissing = HOLDINGS.length - countPricedHoldings(allPrices);
+      if (stillMissing > 0) {
+        setTimeout(async function() {
+          try {
+            var finalPrices = await retryMissingPrices(allPrices);
+            if (finalPrices) {
+              Object.assign(allPrices, finalPrices);
+              var merged = mergePricesIntoCache(allPrices);
+              recalculatePortfolio(merged);
+              updateTableWithPrices(merged);
+              showPriceStatus('live', 'just now \u00b7 ' + priceStatusText(merged));
+            }
+          } catch { /* final retry failed */ }
+        }, 10000);
+      }
+    }, 5000);
   }
 }
 
