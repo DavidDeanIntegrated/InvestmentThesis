@@ -32,7 +32,7 @@ const YAHOO_TICKERS = { 'BTC': 'BTC-USD' };
 // shares = exact share count from Robinhood
 // dollar = position value as of PORTFOLIO_DATE (fallback when live prices unavailable)
 const HOLDINGS = [
-  { ticker: 'BTC',  sleeve: 'Crypto',              shares: 0.00716019, dollar: 808.37 },
+  { ticker: 'BTC',  sleeve: 'Crypto',              shares: 0.00716019, dollar: 458.00 },
   { ticker: 'VTI',  sleeve: 'Broad Market',        shares: 2.385068,   dollar: 808.37 },
   { ticker: 'SGOV', sleeve: 'Dry Powder',           shares: 6.034963,   dollar: 607.24 },
   { ticker: 'GLD',  sleeve: 'Gold',                 shares: 0.833679,   dollar: 396.98 },
@@ -56,6 +56,7 @@ const PORTFOLIO_COUNT = HOLDINGS.length;
 
 function recomputePortfolioMath() {
   PORTFOLIO_TOTAL = HOLDINGS.reduce((sum, h) => sum + h.dollar, 0);
+  HOLDINGS.sort((a, b) => b.dollar - a.dollar);
   HOLDINGS.forEach(h => {
     h.pct = (h.dollar / PORTFOLIO_TOTAL) * 100;
   });
@@ -68,6 +69,7 @@ function recomputePortfolioMath() {
 }
 
 // Initial computation
+HOLDINGS.sort((a, b) => b.dollar - a.dollar);
 HOLDINGS.forEach(h => {
   h.pct = (h.dollar / PORTFOLIO_TOTAL) * 100;
 });
@@ -736,7 +738,8 @@ function recalculatePortfolio(prices) {
   // Update all HTML text (header, footer, stats, callouts, etc.)
   syncDynamicValues();
 
-  // Update holdings table values and percentages
+  // Update holdings table values, percentages, and sort order
+  const tbody = document.getElementById('holdingsTbody');
   HOLDINGS.forEach(h => {
     const row = document.querySelector('tr[data-ticker="' + h.ticker + '"]');
     if (!row) return;
@@ -744,15 +747,20 @@ function recalculatePortfolio(prices) {
     const pctCell = row.querySelector('.pct-cell');
     if (dollarCell) dollarCell.textContent = '$' + fmt(h.dollar);
     if (pctCell) pctCell.textContent = h.pct.toFixed(1) + '%';
+    // Re-append in sorted order (HOLDINGS is already sorted by dollar desc)
+    if (tbody) tbody.appendChild(row);
   });
 
   // Update table footer total
   const tfootTotal = document.getElementById('tableTotalValue');
   if (tfootTotal) tfootTotal.innerHTML = '<strong>$' + fmtWhole(PORTFOLIO_TOTAL) + '</strong>';
 
-  // Update chart
+  // Update chart with new sorted order and colors
   if (chartInstance) {
+    const colors = HOLDINGS.map(h => SLEEVE_COLORS[h.sleeve] || '#888');
+    chartInstance.data.labels = HOLDINGS.map(h => h.ticker);
     chartInstance.data.datasets[0].data = HOLDINGS.map(h => h.pct);
+    chartInstance.data.datasets[0].backgroundColor = colors;
     const dollars = HOLDINGS.map(h => h.dollar);
     const data = HOLDINGS.map(h => h.pct);
     chartInstance.options.plugins.tooltip.callbacks.label = (item) => {
@@ -766,15 +774,16 @@ function recalculatePortfolio(prices) {
   const centerVal = document.querySelector('.chart-center-value');
   if (centerVal) centerVal.textContent = '$' + fmtWhole(PORTFOLIO_TOTAL);
 
-  // Update legend
+  // Rebuild legend in sorted order
   const legendEl = document.getElementById('currentLegend');
   if (legendEl) {
-    const legendItems = legendEl.querySelectorAll('.legend-item');
-    legendItems.forEach((item, i) => {
-      const dollarSpan = item.querySelector('.legend-dollar');
-      const pctSpan = item.querySelector('.legend-pct');
-      if (dollarSpan) dollarSpan.textContent = '$' + fmt(HOLDINGS[i].dollar);
-      if (pctSpan) pctSpan.textContent = HOLDINGS[i].pct.toFixed(1) + '%';
+    legendEl.innerHTML = '';
+    const colors = HOLDINGS.map(h => SLEEVE_COLORS[h.sleeve] || '#888');
+    HOLDINGS.forEach((h, i) => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      item.innerHTML = '<div class="legend-left"><div class="legend-dot" style="background:' + colors[i] + '"></div><span class="legend-ticker">' + h.ticker + '</span></div><span class="legend-dollar">$' + fmt(h.dollar) + '</span><span class="legend-pct">' + h.pct.toFixed(1) + '%</span>';
+      legendEl.appendChild(item);
     });
   }
 
