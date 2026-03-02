@@ -8,7 +8,7 @@ A professional research library for investment theses grounded in Ray Dalio's Al
 
 - **Investment theses** — Individual pages for each portfolio position with long-form analysis, floating table of contents, and prev/next navigation
 - **Thesis search & filtering** — Client-side search by ticker, sector, or keyword; clickable tag chips and sector filters
-- **Portfolio dashboard** — Home page with Chart.js doughnut chart, live market prices from Yahoo Finance, SPY drawdown monitor, deployment ladder, and rebalancing rules
+- **Portfolio dashboard** — Home page with Chart.js doughnut chart, live market prices from Finnhub, SPY drawdown monitor, deployment ladder, and rebalancing rules
 - **Dark mode toggle** — Light/dark theme with localStorage persistence and system preference detection
 - **Responsive design** — Optimized for desktop, tablet, and mobile
 - **Static site** — Built with Jekyll, deployed on GitHub Pages with zero plugins

@@ -26,9 +26,6 @@ const SLEEVE_COLORS = {
   'Commodity':          '#fb923c',
 };
 
-// Yahoo Finance ticker mapping (only for tickers that differ)
-const YAHOO_TICKERS = { 'BTC': 'BTC-USD' };
-
 // shares = exact share count from Robinhood
 // dollar = position value as of PORTFOLIO_DATE (fallback when live prices unavailable)
 const HOLDINGS = [
@@ -561,89 +558,54 @@ function initHoldingsTable() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LIVE MARKET PRICES
+   LIVE MARKET PRICES — Finnhub + CoinGecko
+   ───────────────────────────────────────────────────────────────
+   Stocks/ETFs: Finnhub REST API (free tier, 60 calls/min)
+   Crypto (BTC): CoinGecko free API (no key required)
 ═══════════════════════════════════════════════════════════════ */
 
-// Fetch with a timeout (default 8s) — prevents hanging proxies from blocking everything
+const FINNHUB_TOKEN = 'd6j0l3pr01qleu95sbr0d6j0l3pr01qleu95sbrg';
+
 function fetchWithTimeout(url, timeoutMs) {
   timeoutMs = timeoutMs || 8000;
-  const controller = new AbortController();
-  const timer = setTimeout(function() { controller.abort(); }, timeoutMs);
+  var controller = new AbortController();
+  var timer = setTimeout(function() { controller.abort(); }, timeoutMs);
   return fetch(url, { signal: controller.signal }).finally(function() { clearTimeout(timer); });
 }
 
-// CORS proxy strategies — each returns a { url, parse } pair
-const PROXY_STRATEGIES = [
-  {
-    name: 'allorigins',
-    buildUrl: function(url) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(url); },
-    parse: async function(res) { var w = await res.json(); return JSON.parse(w.contents); },
-  },
-  {
-    name: 'corsproxy',
-    buildUrl: function(url) { return 'https://corsproxy.org/?' + encodeURIComponent(url); },
-    parse: async function(res) { return res.json(); },
-  },
-  {
-    name: 'codetabs',
-    buildUrl: function(url) { return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url); },
-    parse: async function(res) { return res.json(); },
-  },
-];
-
-async function fetchViaProxy(url, startIdx) {
-  startIdx = startIdx || 0;
-  var strategies = PROXY_STRATEGIES.slice(startIdx).concat(PROXY_STRATEGIES.slice(0, startIdx));
-  for (var i = 0; i < strategies.length; i++) {
-    var s = strategies[i];
-    try {
-      var res = await fetchWithTimeout(s.buildUrl(url));
-      if (res.ok) return await s.parse(res);
-    } catch { /* next strategy */ }
-  }
-  throw new Error('All proxy strategies failed for: ' + url);
-}
-
-// Reverse-map Yahoo symbols back to portfolio tickers
-const YAHOO_REVERSE = {};
-Object.entries(YAHOO_TICKERS).forEach(([k, v]) => { YAHOO_REVERSE[v] = k; });
-
-function parseYahooPrice(meta) {
-  if (!meta || !meta.regularMarketPrice) return null;
-  var price = meta.regularMarketPrice;
-  var prevClose = meta.chartPreviousClose || meta.previousClose || price;
+// Fetch a single stock/ETF quote from Finnhub
+async function fetchStockQuote(ticker) {
+  var url = 'https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent(ticker) + '&token=' + FINNHUB_TOKEN;
+  var res = await fetchWithTimeout(url);
+  if (!res.ok) throw new Error('Finnhub ' + res.status);
+  var q = await res.json();
+  // q = { c: current, d: change, dp: percent change, h: high, l: low, o: open, pc: previous close, t: timestamp }
+  if (!q || !q.c || q.c === 0) return null;
   return {
-    price: price,
-    prevClose: prevClose,
-    change: prevClose ? ((price - prevClose) / prevClose) * 100 : 0,
+    price: q.c,
+    prevClose: q.pc || q.c,
+    change: q.dp || 0,
   };
 }
 
-async function fetchAllPricesBatch(proxyIdx) {
-  var symbols = HOLDINGS.map(function(h) { return YAHOO_TICKERS[h.ticker] || h.ticker; }).join(',');
-  var url = 'https://query2.finance.yahoo.com/v8/finance/spark?symbols=' + encodeURIComponent(symbols) + '&range=1d&interval=1d';
-
-  var json = await fetchViaProxy(url, proxyIdx);
-  var results = {};
-  var items = (json.spark && json.spark.result) || [];
-  for (var i = 0; i < items.length; i++) {
-    var item = items[i];
-    var resp = item.response && item.response[0];
-    if (!resp || !resp.meta) continue;
-    var data = parseYahooPrice(resp.meta);
-    if (!data) continue;
-    var ticker = YAHOO_REVERSE[item.symbol] || item.symbol;
-    results[ticker] = data;
-  }
-  return Object.keys(results).length > 0 ? results : null;
+// Fetch BTC price from CoinGecko (no API key needed)
+async function fetchBtcPrice() {
+  var url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true';
+  var res = await fetchWithTimeout(url);
+  if (!res.ok) throw new Error('CoinGecko ' + res.status);
+  var data = await res.json();
+  if (!data.bitcoin || !data.bitcoin.usd) return null;
+  return {
+    price: data.bitcoin.usd,
+    prevClose: data.bitcoin.usd / (1 + (data.bitcoin.usd_24h_change || 0) / 100),
+    change: data.bitcoin.usd_24h_change || 0,
+  };
 }
 
-async function fetchSinglePrice(ticker, proxyIdx) {
-  var yahooTicker = YAHOO_TICKERS[ticker] || ticker;
-  var url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(yahooTicker) + '?range=1d&interval=1d';
-  var json = await fetchViaProxy(url, proxyIdx);
-  var result = json.chart && json.chart.result && json.chart.result[0];
-  return result ? parseYahooPrice(result.meta) : null;
+// Route to the right fetcher based on ticker
+function fetchSinglePrice(ticker) {
+  if (ticker === 'BTC') return fetchBtcPrice();
+  return fetchStockQuote(ticker);
 }
 
 // Merge new prices into cached prices and save
@@ -655,83 +617,52 @@ function mergePricesIntoCache(newPrices) {
   return merged;
 }
 
-// Fetch individual tickers in parallel with all fetches racing independently
-async function fetchMissingPrices(tickers, proxyIdx) {
-  var results = {};
-  var fetches = tickers.map(function(ticker) {
-    return fetchSinglePrice(ticker, proxyIdx).then(function(data) {
-      if (data) results[ticker] = data;
-    }).catch(function() { /* skip */ });
-  });
-  await Promise.all(fetches);
-  return results;
-}
-
+// Fetch all tickers in parallel — each independently
 async function fetchAllPrices() {
   var results = {};
-
-  // Round 1: Try batch endpoint
-  try {
-    var batch = await fetchAllPricesBatch(0);
-    if (batch) Object.assign(results, batch);
-  } catch { /* batch failed */ }
-
-  // Find missing tickers and fetch them individually (all in parallel)
-  var missing = HOLDINGS.filter(function(h) { return !results[h.ticker]; }).map(function(h) { return h.ticker; });
-  if (missing.length > 0) {
-    var individual = await fetchMissingPrices(missing, 0);
-    Object.assign(results, individual);
-  }
-
+  var fetches = HOLDINGS.map(function(h) {
+    return fetchSinglePrice(h.ticker).then(function(data) {
+      if (data) results[h.ticker] = data;
+    }).catch(function() { /* skip failed ticker */ });
+  });
+  await Promise.all(fetches);
   return Object.keys(results).length > 0 ? results : null;
 }
 
-// Retry still-missing tickers using a different proxy start index
+// Retry only the tickers that are still missing
 async function retryMissingPrices(existingPrices) {
   var have = existingPrices || {};
-  var missing = HOLDINGS.filter(function(h) { return !have[h.ticker]; }).map(function(h) { return h.ticker; });
+  var missing = HOLDINGS.filter(function(h) { return !have[h.ticker]; });
   if (missing.length === 0) return null;
 
   var results = {};
-
-  // Try batch with a different proxy first
-  try {
-    var batch = await fetchAllPricesBatch(1);
-    if (batch) {
-      for (var i = 0; i < missing.length; i++) {
-        if (batch[missing[i]]) results[missing[i]] = batch[missing[i]];
-      }
-    }
-  } catch { /* batch retry failed */ }
-
-  // Individual fetch for anything still missing, using yet another proxy
-  var stillMissing = missing.filter(function(t) { return !results[t]; });
-  if (stillMissing.length > 0) {
-    var individual = await fetchMissingPrices(stillMissing, 2);
-    Object.assign(results, individual);
-  }
-
+  var fetches = missing.map(function(h) {
+    return fetchSinglePrice(h.ticker).then(function(data) {
+      if (data) results[h.ticker] = data;
+    }).catch(function() { /* skip */ });
+  });
+  await Promise.all(fetches);
   return Object.keys(results).length > 0 ? results : null;
 }
 
 function updateTableWithPrices(prices) {
   if (!prices) return;
 
-  HOLDINGS.forEach(h => {
-    const data = prices[h.ticker];
+  HOLDINGS.forEach(function(h) {
+    var data = prices[h.ticker];
     if (!data) return;
 
-    const row = document.querySelector('tr[data-ticker="' + h.ticker + '"]');
+    var row = document.querySelector('tr[data-ticker="' + h.ticker + '"]');
     if (!row) return;
 
-    const priceCell = row.querySelector('.price-cell');
-    const changeCell = row.querySelector('.change-cell');
+    var priceCell = row.querySelector('.price-cell');
+    var changeCell = row.querySelector('.change-cell');
 
     if (priceCell) {
       priceCell.textContent = '$' + fmt(data.price);
     }
     if (changeCell) {
-      const sign = data.change >= 0 ? '+' : '';
+      var sign = data.change >= 0 ? '+' : '';
       changeCell.textContent = sign + data.change.toFixed(2) + '%';
       changeCell.className = 'change-cell ' + (data.change >= 0 ? 'positive' : 'negative');
     }
@@ -739,7 +670,7 @@ function updateTableWithPrices(prices) {
 }
 
 function showPriceStatus(state, detail) {
-  const el = document.getElementById('tablePriceStatus');
+  var el = document.getElementById('tablePriceStatus');
   if (!el) return;
 
   if (state === 'loading') {
@@ -861,7 +792,7 @@ async function initLivePrices() {
     showPriceStatus('loading');
   }
 
-  // Step 2: Fetch fresh prices (batch + individual fallback)
+  // Step 2: Fetch fresh prices (all tickers in parallel)
   try {
     var prices = await fetchAllPrices();
     if (prices) {
@@ -1119,19 +1050,31 @@ function spyTriggerLabel(pct, high) {
 }
 
 async function fetchSpyData() {
-  const yahooUrl = 'https://query2.finance.yahoo.com/v8/finance/chart/SPY?range=3mo&interval=1d&includePrePost=false';
+  // Fetch current SPY quote from Finnhub
+  var quoteUrl = 'https://finnhub.io/api/v1/quote?symbol=SPY&token=' + FINNHUB_TOKEN;
+  var quoteRes = await fetchWithTimeout(quoteUrl);
+  if (!quoteRes.ok) throw new Error('Finnhub quote ' + quoteRes.status);
+  var quote = await quoteRes.json();
+  if (!quote || !quote.c) throw new Error('No SPY quote data');
 
-  const json   = await fetchViaProxy(yahooUrl);
-  const result = json.chart.result[0];
-  const closes = result.indicators.quote[0].close.filter(c => c != null);
+  var current = quote.c;
 
-  if (!closes.length) throw new Error('No price data returned');
+  // Fetch 3-month daily candles to find the rolling high
+  var now = Math.floor(Date.now() / 1000);
+  var threeMonthsAgo = now - (90 * 24 * 60 * 60);
+  var candleUrl = 'https://finnhub.io/api/v1/stock/candle?symbol=SPY&resolution=D&from=' + threeMonthsAgo + '&to=' + now + '&token=' + FINNHUB_TOKEN;
+  var candleRes = await fetchWithTimeout(candleUrl);
+  if (!candleRes.ok) throw new Error('Finnhub candle ' + candleRes.status);
+  var candles = await candleRes.json();
 
-  const current = result.meta.regularMarketPrice;
-  const high3m  = Math.max(...closes);
-  const pct     = ((current - high3m) / high3m) * 100;
+  if (!candles || candles.s !== 'ok' || !candles.c || !candles.c.length) {
+    throw new Error('No SPY candle data');
+  }
 
-  const data = { current, high3m, pct };
+  var high3m = Math.max.apply(null, candles.c);
+  var pct = ((current - high3m) / high3m) * 100;
+
+  var data = { current: current, high3m: high3m, pct: pct };
   setCache('spy', data);
   return data;
 }
@@ -1169,7 +1112,7 @@ function initSpyLive() {
   }
 
   function showError() {
-    body.innerHTML = '<div class="spy-live-error"><div class="spy-live-error-msg">Live data unavailable</div><div class="spy-live-error-sub">Yahoo Finance blocked the request (CORS). Use the calculator \u2192 to enter prices manually.</div></div>';
+    body.innerHTML = '<div class="spy-live-error"><div class="spy-live-error-msg">Live data unavailable</div><div class="spy-live-error-sub">Could not reach market data API. Use the calculator \u2192 to enter prices manually.</div></div>';
   }
 
   async function load() {
@@ -1185,7 +1128,7 @@ function initSpyLive() {
       } else {
         showError();
       }
-      // CORS proxy failures are expected — silently fall back to cache
+      // API failures are expected sometimes — silently fall back to cache
     } finally {
       refreshBtn.classList.remove('spinning');
       refreshBtn.disabled = false;
