@@ -799,6 +799,9 @@ function recalculatePortfolio(prices) {
   // Update performance chart header with live portfolio total
   var perfValueEl = document.getElementById('perfValue');
   if (perfValueEl) perfValueEl.textContent = perfFmtValue(PORTFOLIO_TOTAL);
+
+  // If perf chart hasn't rendered yet, try fallback now that prices are available
+  retryPerfChartIfEmpty();
 }
 
 function countPricedHoldings(prices) {
@@ -1307,15 +1310,18 @@ async function buildPortfolioSeries(range) {
   var resolution, from, days;
 
   if (range === '1D') {
+    // 5-min candles; look back 3 days to handle weekends/holidays
     resolution = '5';
-    from = now - 24 * 60 * 60;
+    from = now - 3 * 24 * 60 * 60;
     days = 1;
   } else if (range === '7D') {
-    resolution = 'D';
+    // 30-min candles for 7-day view
+    resolution = '30';
     from = now - 8 * 24 * 60 * 60;
     days = 7;
   } else {
-    resolution = 'D';
+    // 60-min candles for 1-month view
+    resolution = '60';
     from = now - 32 * 24 * 60 * 60;
     days = 30;
   }
@@ -1359,7 +1365,22 @@ async function buildPortfolioSeries(range) {
 
   if (!baseTimestamps || baseTimestamps.length < 2) return null;
 
+  // For 1D: trim to only the last trading session
+  if (range === '1D' && baseTimestamps.length > 2) {
+    // Find the largest gap between consecutive timestamps (overnight break)
+    var lastSessionStart = 0;
+    for (var g = 1; g < baseTimestamps.length; g++) {
+      if (baseTimestamps[g] - baseTimestamps[g - 1] > 3600) {
+        lastSessionStart = g; // start of new session after overnight gap
+      }
+    }
+    if (lastSessionStart > 0) {
+      baseTimestamps = baseTimestamps.slice(lastSessionStart);
+    }
+  }
+
   // Build portfolio value at each timestamp
+  // Always use findNearestPrice for robust timestamp alignment
   var series = [];
   for (var i = 0; i < baseTimestamps.length; i++) {
     var t = baseTimestamps[i];
@@ -1374,16 +1395,11 @@ async function buildPortfolioSeries(range) {
         value += h.dollar;
       } else {
         var cd = candles[h.ticker];
-        if (cd && cd.c[i] != null) {
-          value += h.shares * cd.c[i];
-        } else if (cd) {
-          // Timestamp mismatch — find nearest
+        if (cd) {
           var p = findNearestPrice(cd.t, cd.c, t);
           if (p != null) { value += h.shares * p; return; }
-          value += h.dollar;
-        } else {
-          value += h.dollar;
         }
+        value += h.dollar;
       }
     });
 
@@ -1559,6 +1575,49 @@ function setupPerfChartEvents() {
   });
 }
 
+// Build a minimal 1D series from live quote data (fallback when candles fail)
+function buildFallbackSeries() {
+  var cached = getCache('prices');
+  if (!cached || !cached.data) return null;
+  var prices = cached.data;
+
+  var startValue = 0;
+  var endValue = 0;
+  var hasPrices = false;
+
+  HOLDINGS.forEach(function(h) {
+    var data = prices[h.ticker];
+    if (data && data.price) {
+      var dayChange = data.dayChangeDollar || 0;
+      startValue += h.shares * (data.price - dayChange);
+      endValue += h.shares * data.price;
+      hasPrices = true;
+    } else {
+      startValue += h.dollar;
+      endValue += h.dollar;
+    }
+  });
+
+  if (!hasPrices) return null;
+
+  // Create points from approximate market open (9:30 AM ET) to now
+  var now = Date.now();
+  var today = new Date();
+  today.setHours(9, 30, 0, 0);
+  var marketOpen = today.getTime();
+  if (now < marketOpen) marketOpen -= 24 * 60 * 60 * 1000;
+
+  // Interpolate a few points so the chart has some substance
+  var points = [];
+  var steps = 20;
+  for (var i = 0; i <= steps; i++) {
+    var t = marketOpen + (now - marketOpen) * (i / steps);
+    var v = startValue + (endValue - startValue) * (i / steps);
+    points.push({ time: t, value: v });
+  }
+  return points;
+}
+
 // Load a specific range (with cache)
 async function loadPerfChart(range) {
   var returnEl = document.getElementById('perfReturn');
@@ -1578,11 +1637,31 @@ async function loadPerfChart(range) {
     if (series && series.length >= 2) {
       perfSeriesCache[range] = series;
       renderPerfChart(series, range);
-    } else {
-      if (returnEl) returnEl.textContent = 'No data available';
+      return;
     }
-  } catch (err) {
-    if (returnEl) returnEl.textContent = 'Chart data unavailable';
+  } catch (err) { /* candle fetch failed */ }
+
+  // Fallback for 1D: use live price data
+  if (range === '1D') {
+    var fallback = buildFallbackSeries();
+    if (fallback) {
+      renderPerfChart(fallback, range);
+      return;
+    }
+    // No live prices yet — will retry when prices arrive
+    if (returnEl) returnEl.textContent = 'Waiting for price data\u2026';
+  } else {
+    if (returnEl) returnEl.textContent = 'Historical data unavailable';
+  }
+}
+
+// Called after live prices arrive to render fallback chart if needed
+function retryPerfChartIfEmpty() {
+  if (perfChartInstance) return; // already rendered
+  if (perfCurrentRange !== '1D') return; // fallback only works for 1D
+  var fallback = buildFallbackSeries();
+  if (fallback) {
+    renderPerfChart(fallback, '1D');
   }
 }
 
