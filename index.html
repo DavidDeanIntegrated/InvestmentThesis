@@ -78,6 +78,24 @@ extra_js:
     </div>
   </section>
 
+  <!-- Portfolio Performance Chart -->
+  <section class="section" id="perfChartSection">
+    <div class="perf-container">
+      <div class="perf-header">
+        <div class="perf-value" id="perfValue">$3,790</div>
+        <div class="perf-return" id="perfReturn"></div>
+      </div>
+      <div class="perf-range-tabs" id="perfRangeTabs">
+        <button class="perf-tab active" data-range="1D">1D</button>
+        <button class="perf-tab" data-range="7D">7D</button>
+        <button class="perf-tab" data-range="1M">1M</button>
+      </div>
+      <div class="perf-chart-wrap">
+        <canvas id="perfChart"></canvas>
+      </div>
+    </div>
+  </section>
+
   <!-- Current Allocation -->
   <section class="section">
     <div class="section-header">

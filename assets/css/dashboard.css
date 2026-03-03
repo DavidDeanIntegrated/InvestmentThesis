@@ -124,6 +124,72 @@
 .section:nth-child(8)  { animation-delay: 0.40s; }
 .section:nth-child(9)  { animation-delay: 0.45s; }
 
+/* ================================================================
+   PORTFOLIO PERFORMANCE CHART (Robinhood-style)
+================================================================ */
+.perf-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 28px 20px;
+}
+
+.perf-header { margin-bottom: 12px; }
+
+.perf-value {
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.perf-return {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.perf-return.perf-positive { color: var(--green); }
+.perf-return.perf-negative { color: var(--red); }
+
+.perf-range-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.perf-tab {
+  padding: 5px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.perf-tab:hover {
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+.perf-tab.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.perf-chart-wrap {
+  position: relative;
+  height: 240px;
+}
+
+/* ================================================================
+   SECTION LAYOUT
+================================================================ */
 .section-header {
   display: flex;
   align-items: center;
@@ -1608,4 +1674,7 @@
   .rebal-step { flex-direction: column; gap: 8px; }
   .rebal-table { font-size: 0.72rem; }
   .rebal-table th, .rebal-table td { padding: 8px 10px; }
+  .perf-container { padding: 20px 16px 16px; border-radius: 12px; }
+  .perf-value { font-size: 1.6rem; }
+  .perf-chart-wrap { height: 180px; }
 }
