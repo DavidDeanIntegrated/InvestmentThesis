@@ -799,6 +799,9 @@ function recalculatePortfolio(prices) {
   // Update performance chart header with live portfolio total
   var perfValueEl = document.getElementById('perfValue');
   if (perfValueEl) perfValueEl.textContent = perfFmtValue(PORTFOLIO_TOTAL);
+
+  // If perf chart hasn't rendered yet, try fallback now that prices are available
+  retryPerfChartIfEmpty();
 }
 
 function countPricedHoldings(prices) {
@@ -1559,6 +1562,49 @@ function setupPerfChartEvents() {
   });
 }
 
+// Build a minimal 1D series from live quote data (fallback when candles fail)
+function buildFallbackSeries() {
+  var cached = getCache('prices');
+  if (!cached || !cached.data) return null;
+  var prices = cached.data;
+
+  var startValue = 0;
+  var endValue = 0;
+  var hasPrices = false;
+
+  HOLDINGS.forEach(function(h) {
+    var data = prices[h.ticker];
+    if (data && data.price) {
+      var dayChange = data.dayChangeDollar || 0;
+      startValue += h.shares * (data.price - dayChange);
+      endValue += h.shares * data.price;
+      hasPrices = true;
+    } else {
+      startValue += h.dollar;
+      endValue += h.dollar;
+    }
+  });
+
+  if (!hasPrices) return null;
+
+  // Create points from approximate market open (9:30 AM ET) to now
+  var now = Date.now();
+  var today = new Date();
+  today.setHours(9, 30, 0, 0);
+  var marketOpen = today.getTime();
+  if (now < marketOpen) marketOpen -= 24 * 60 * 60 * 1000;
+
+  // Interpolate a few points so the chart has some substance
+  var points = [];
+  var steps = 20;
+  for (var i = 0; i <= steps; i++) {
+    var t = marketOpen + (now - marketOpen) * (i / steps);
+    var v = startValue + (endValue - startValue) * (i / steps);
+    points.push({ time: t, value: v });
+  }
+  return points;
+}
+
 // Load a specific range (with cache)
 async function loadPerfChart(range) {
   var returnEl = document.getElementById('perfReturn');
@@ -1578,11 +1624,31 @@ async function loadPerfChart(range) {
     if (series && series.length >= 2) {
       perfSeriesCache[range] = series;
       renderPerfChart(series, range);
-    } else {
-      if (returnEl) returnEl.textContent = 'No data available';
+      return;
     }
-  } catch (err) {
-    if (returnEl) returnEl.textContent = 'Chart data unavailable';
+  } catch (err) { /* candle fetch failed */ }
+
+  // Fallback for 1D: use live price data
+  if (range === '1D') {
+    var fallback = buildFallbackSeries();
+    if (fallback) {
+      renderPerfChart(fallback, range);
+      return;
+    }
+    // No live prices yet — will retry when prices arrive
+    if (returnEl) returnEl.textContent = 'Waiting for price data\u2026';
+  } else {
+    if (returnEl) returnEl.textContent = 'Historical data unavailable';
+  }
+}
+
+// Called after live prices arrive to render fallback chart if needed
+function retryPerfChartIfEmpty() {
+  if (perfChartInstance) return; // already rendered
+  if (perfCurrentRange !== '1D') return; // fallback only works for 1D
+  var fallback = buildFallbackSeries();
+  if (fallback) {
+    renderPerfChart(fallback, '1D');
   }
 }
 
