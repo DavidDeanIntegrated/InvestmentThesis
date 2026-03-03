@@ -1507,6 +1507,16 @@
 .change-cell.positive { color: var(--green); }
 .change-cell.negative { color: var(--red); }
 
+.return-cell {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.return-cell.positive { color: var(--green); }
+.return-cell.negative { color: var(--red); }
+
 .price-status {
   display: inline-flex;
   align-items: center;
@@ -1586,10 +1596,12 @@
   .chart-legend { grid-template-columns: 1fr; }
   .stat-pill { padding: 8px 12px; }
   .stat-value { font-size: 0.9rem; }
-  .price-cell, .change-cell,
+  .price-cell, .change-cell, .return-cell,
   .holdings-table th:nth-child(5),
   .holdings-table th:nth-child(6),
-  .holdings-table tfoot td[colspan="2"]:last-child { display: none; }
+  .holdings-table th:nth-child(7),
+  .holdings-table tfoot td[colspan="2"],
+  .holdings-table tfoot #tableTotalReturn { display: none; }
   .rebal-step { flex-direction: column; gap: 8px; }
   .rebal-table { font-size: 0.72rem; }
   .rebal-table th, .rebal-table td { padding: 8px 10px; }
