@@ -552,7 +552,8 @@ function initHoldingsTable() {
       '<td class="dollar-cell">$' + fmt(h.dollar) + '</td>' +
       '<td class="pct-cell">' + h.pct.toFixed(1) + '%</td>' +
       '<td class="price-cell">\u2014</td>' +
-      '<td class="change-cell">\u2014</td>';
+      '<td class="change-cell">\u2014</td>' +
+      '<td class="return-cell">\u2014</td>';
     tbody.appendChild(tr);
   });
 }
@@ -657,6 +658,7 @@ function updateTableWithPrices(prices) {
 
     var priceCell = row.querySelector('.price-cell');
     var changeCell = row.querySelector('.change-cell');
+    var returnCell = row.querySelector('.return-cell');
 
     if (priceCell) {
       priceCell.textContent = '$' + fmt(data.price);
@@ -666,7 +668,25 @@ function updateTableWithPrices(prices) {
       changeCell.textContent = sign + data.change.toFixed(2) + '%';
       changeCell.className = 'change-cell ' + (data.change >= 0 ? 'positive' : 'negative');
     }
+    if (returnCell) {
+      var todayReturn = h.shares * (data.price - data.prevClose);
+      var rSign = todayReturn >= 0 ? '+' : '';
+      returnCell.textContent = rSign + '$' + Math.abs(todayReturn).toFixed(2);
+      returnCell.className = 'return-cell ' + (todayReturn >= 0 ? 'positive' : 'negative');
+    }
   });
+
+  // Update total return in table footer
+  var totalReturn = 0;
+  HOLDINGS.forEach(function(h) {
+    var data = prices[h.ticker];
+    if (data) totalReturn += h.shares * (data.price - data.prevClose);
+  });
+  var footerCell = document.getElementById('tableTotalReturn');
+  if (footerCell) {
+    var tSign = totalReturn >= 0 ? '+' : '';
+    footerCell.innerHTML = '<strong class="' + (totalReturn >= 0 ? 'positive' : 'negative') + '">' + tSign + '$' + Math.abs(totalReturn).toFixed(2) + '</strong>';
+  }
 }
 
 function showPriceStatus(state, detail) {
