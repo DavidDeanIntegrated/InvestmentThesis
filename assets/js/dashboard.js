@@ -691,7 +691,7 @@ function updateTableWithPrices(prices) {
   });
   var footerCell = document.getElementById('tableTotalReturn');
   if (footerCell) {
-    var tSign = totalReturn >= 0 ? '+' : '';
+    var tSign = totalReturn >= 0 ? '+' : '-';
     footerCell.innerHTML = '<strong class="' + (totalReturn >= 0 ? 'positive' : 'negative') + '">' + tSign + '$' + Math.abs(totalReturn).toFixed(2) + '</strong>';
   }
 }
