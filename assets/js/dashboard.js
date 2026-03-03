@@ -580,12 +580,12 @@ async function fetchStockQuote(ticker) {
   var res = await fetchWithTimeout(url);
   if (!res.ok) throw new Error('Finnhub ' + res.status);
   var q = await res.json();
-  // q = { c: current, d: change, dp: percent change, h: high, l: low, o: open, pc: previous close, t: timestamp }
+  // q = { c: current, d: change $, dp: change %, h: high, l: low, o: open, pc: previous close, t: timestamp }
   if (!q || !q.c || q.c === 0) return null;
   return {
     price: q.c,
-    prevClose: q.pc || q.c,
     change: q.dp || 0,
+    dayChangeDollar: q.d || 0,
   };
 }
 
@@ -596,10 +596,11 @@ async function fetchBtcPrice() {
   if (!res.ok) throw new Error('CoinGecko ' + res.status);
   var data = await res.json();
   if (!data.bitcoin || !data.bitcoin.usd) return null;
+  var pct = data.bitcoin.usd_24h_change || 0;
   return {
     price: data.bitcoin.usd,
-    prevClose: data.bitcoin.usd / (1 + (data.bitcoin.usd_24h_change || 0) / 100),
-    change: data.bitcoin.usd_24h_change || 0,
+    change: pct,
+    dayChangeDollar: pct !== 0 ? data.bitcoin.usd * pct / (100 + pct) : 0,
   };
 }
 
@@ -669,7 +670,10 @@ function updateTableWithPrices(prices) {
       changeCell.className = 'change-cell ' + (data.change >= 0 ? 'positive' : 'negative');
     }
     if (returnCell) {
-      var todayReturn = h.shares * (data.price - data.prevClose);
+      // dayChangeDollar = per-share $ change; fall back to deriving from price × change%
+      var perShare = data.dayChangeDollar != null ? data.dayChangeDollar
+        : (data.change ? data.price * data.change / (100 + data.change) : 0);
+      var todayReturn = h.shares * perShare;
       var rSign = todayReturn >= 0 ? '+' : '';
       returnCell.textContent = rSign + '$' + Math.abs(todayReturn).toFixed(2);
       returnCell.className = 'return-cell ' + (todayReturn >= 0 ? 'positive' : 'negative');
@@ -680,7 +684,10 @@ function updateTableWithPrices(prices) {
   var totalReturn = 0;
   HOLDINGS.forEach(function(h) {
     var data = prices[h.ticker];
-    if (data) totalReturn += h.shares * (data.price - data.prevClose);
+    if (!data) return;
+    var perShare = data.dayChangeDollar != null ? data.dayChangeDollar
+      : (data.change ? data.price * data.change / (100 + data.change) : 0);
+    totalReturn += h.shares * perShare;
   });
   var footerCell = document.getElementById('tableTotalReturn');
   if (footerCell) {
