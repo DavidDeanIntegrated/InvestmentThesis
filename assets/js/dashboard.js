@@ -692,7 +692,8 @@ function updateTableWithPrices(prices) {
   var footerCell = document.getElementById('tableTotalReturn');
   if (footerCell) {
     var tSign = totalReturn >= 0 ? '+' : '-';
-    footerCell.innerHTML = '<strong class="' + (totalReturn >= 0 ? 'positive' : 'negative') + '">' + tSign + '$' + Math.abs(totalReturn).toFixed(2) + '</strong>';
+    footerCell.className = totalReturn >= 0 ? 'total-return-positive' : 'total-return-negative';
+    footerCell.innerHTML = '<strong>' + tSign + '$' + Math.abs(totalReturn).toFixed(2) + '</strong>';
   }
 }
 
