@@ -1310,15 +1310,18 @@ async function buildPortfolioSeries(range) {
   var resolution, from, days;
 
   if (range === '1D') {
+    // 5-min candles; look back 3 days to handle weekends/holidays
     resolution = '5';
-    from = now - 24 * 60 * 60;
+    from = now - 3 * 24 * 60 * 60;
     days = 1;
   } else if (range === '7D') {
-    resolution = 'D';
+    // 30-min candles for 7-day view
+    resolution = '30';
     from = now - 8 * 24 * 60 * 60;
     days = 7;
   } else {
-    resolution = 'D';
+    // 60-min candles for 1-month view
+    resolution = '60';
     from = now - 32 * 24 * 60 * 60;
     days = 30;
   }
@@ -1362,7 +1365,22 @@ async function buildPortfolioSeries(range) {
 
   if (!baseTimestamps || baseTimestamps.length < 2) return null;
 
+  // For 1D: trim to only the last trading session
+  if (range === '1D' && baseTimestamps.length > 2) {
+    // Find the largest gap between consecutive timestamps (overnight break)
+    var lastSessionStart = 0;
+    for (var g = 1; g < baseTimestamps.length; g++) {
+      if (baseTimestamps[g] - baseTimestamps[g - 1] > 3600) {
+        lastSessionStart = g; // start of new session after overnight gap
+      }
+    }
+    if (lastSessionStart > 0) {
+      baseTimestamps = baseTimestamps.slice(lastSessionStart);
+    }
+  }
+
   // Build portfolio value at each timestamp
+  // Always use findNearestPrice for robust timestamp alignment
   var series = [];
   for (var i = 0; i < baseTimestamps.length; i++) {
     var t = baseTimestamps[i];
@@ -1377,16 +1395,11 @@ async function buildPortfolioSeries(range) {
         value += h.dollar;
       } else {
         var cd = candles[h.ticker];
-        if (cd && cd.c[i] != null) {
-          value += h.shares * cd.c[i];
-        } else if (cd) {
-          // Timestamp mismatch — find nearest
+        if (cd) {
           var p = findNearestPrice(cd.t, cd.c, t);
           if (p != null) { value += h.shares * p; return; }
-          value += h.dollar;
-        } else {
-          value += h.dollar;
         }
+        value += h.dollar;
       }
     });
 
