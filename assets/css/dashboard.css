@@ -1517,6 +1517,9 @@
 .return-cell.positive { color: var(--green); }
 .return-cell.negative { color: var(--red); }
 
+#tableTotalReturn .positive { color: var(--green); }
+#tableTotalReturn .negative { color: var(--red); }
+
 .price-status {
   display: inline-flex;
   align-items: center;
