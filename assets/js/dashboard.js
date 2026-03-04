@@ -32,7 +32,7 @@ const HOLDINGS = [
   { ticker: 'BTC',  sleeve: 'Crypto',              shares: 0.00716019, dollar: 458.00 },
   { ticker: 'VTI',  sleeve: 'Broad Market',        shares: 2.385068,   dollar: 808.37 },
   { ticker: 'SGOV', sleeve: 'Dry Powder',           shares: 6.034963,   dollar: 607.24 },
-  { ticker: 'GLD',  sleeve: 'Gold',                 shares: 0.833679,   dollar: 396.98 },
+  { ticker: 'GLD',  sleeve: 'Gold',                 shares: 0.987421,   dollar: 396.98 },
   { ticker: 'VTV',  sleeve: 'Value',                shares: 1.495409,   dollar: 310.01 },
   { ticker: 'VXUS', sleeve: 'International',        shares: 2.729559,   dollar: 229.28 },
   { ticker: 'NVDA', sleeve: 'Quality Compounder',   shares: 1.069294,   dollar: 197.93 },
